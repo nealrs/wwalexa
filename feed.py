@@ -1,17 +1,3 @@
-# FLASK AUDIO FEED FOR ALEXA
-# This app dynamically generates an audio JSON Alexa Flash Briefing feed, based on the day of the week.
-#
-# M/W/F, it returns an audio file based on the current date (YYYY-MM-DD.mp3).
-# Su/T/Th/Sa, it returns a canned "we're off the air today" mp3.
-#
-# It uses Pacific time to determine what day it is -- since Alexa is primarily a US thing.
-#
-# Follow the steps in  https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill to setup your Flash Briefing & submit it for certification
-#
-# (Obvious) Suggestions:
-# 1. Use S3 to host your media files
-# 2. Use an Amazon Lambda to serve your feed & deploy with Zappa.
-
 from flask import Flask
 from datetime import datetime
 import uuid
@@ -46,7 +32,7 @@ def index():
     feed['mainText'] = '' # Automatically ignored, since this is an audio feed
     #feed['redirectionURL'] = '' # I suppose you could use this, depending on how you structure your CMS
 
-    #day = 4 # manual override for debugging
+    day = 4 # manual override for debugging
     if day % 2 != 0:
         print "broadcast day"
         feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
