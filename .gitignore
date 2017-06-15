@@ -1,2 +1,3 @@
 venv/
 zappa_settings.json
+.env
