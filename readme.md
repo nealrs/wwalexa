@@ -1,4 +1,4 @@
-## FLASK AUDIO FEED FOR ALEXA
+## AlexaFeed
 
 This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
@@ -8,9 +8,9 @@ This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
 [Click here for a live demo of the feed](https://wakeyio-alexa.herokuapp.com/).
 
-[Click here to listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3). I haven't certified my skill yet, so that's why you can't subscribe to it yet :see_no_evil:
+[Click here to listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3). I haven't certified my skill yet, so that's why you can't subscribe to it / no full live demo (but I can give you beta access if you ask.) :see_no_evil:
 
-## Calling in updates
+## Calling in Updates
 
 If you are an authorized caller, the app greets and prompts you to set an air date as a 4 digit DTMF input, (so `1031` would be Halloween).
 
