@@ -102,8 +102,8 @@ def index():
     feed['mainText'] = '' # Automatically ignored, since this is an audio feed
     #feed['redirectionURL'] = '' # I suppose you could use this, depending on how you structure your CMS
 
-    day = 4 # manual override for debugging
-    if day % 2 != 0:
+    #day = 4 # manual override for debugging
+    if day in [1, 3, 5]:
         print "broadcast day"
         feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
         feed['streamUrl'] = 'https://wakey.io/public/mp3/'+date+'.mp3'
