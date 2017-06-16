@@ -106,11 +106,11 @@ def index():
     if day in [1, 3, 5]:
         print "broadcast day"
         feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
-        feed['streamUrl'] = 'https://wakey.io/public/mp3/'+date+'.mp3'
+        feed['streamUrl'] = 'https://wakey.io/alexa_audio/'+date+'.mp3'
     else:
         print "off-air day"
         feed['titleText'] = 'Wakey Wakey airs Monday, Wednesday, and Friday.'
-        feed['streamUrl'] = 'https://wakey.io/public/mp3/offair.mp3'
+        feed['streamUrl'] = 'https://wakey.io/alexa_audio/offair.mp3'
 
     feed_json = json.dumps(feed)
     print feed_json

@@ -1,8 +1,28 @@
 ## FLASK AUDIO FEED FOR ALEXA
 
-This app dynamically generates an audio JSON Alexa Flash Briefing feed, based on the day of the week. [Here's a live demo](https://09kp4l2utc.execute-api.us-east-1.amazonaws.com/dev).
+This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
-As configured, on Monday, Wednesday, and Friday, it plays an audio file based on the current date (YYYY-MM-DD.mp3).
+1. Allowing you to call in and record audio clips, saving them to s3 using date-based filename.
+
+2. Generating a dynamic Alexa Flash Briefing JSON feed based on the current date.
+
+[Click here for a live demo of the feed](https://wakeyio-alexa.herokuapp.com/).
+
+[Click here to listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3). I haven't certified my skill yet, so that's why you can't subscribe to it yet :see_no_evil:
+
+## Calling in updates
+
+If you are an authorized caller, the app greets and prompts you to set an air date as a 4 digit DTMF input, (so `1031` would be Halloween).
+
+Next, it'll ask you to record up to 3 minutes of audio and replay it for you.
+
+If you are satisfied with your recording, you press `1` and the app will upload the audio (as an mp3) to s3 using the current day `2017-10-31` as the filename.
+
+Once confirmed, the app will tell you to rock on and hangup. And boom, you've recorded a new episode for your flash briefing!!
+
+## The Feed
+
+As configured, on Monday, Wednesday, and Friday, your briefing will play an audio file based on the current date (YYYY-MM-DD.mp3).
 
 ```
 {
@@ -28,9 +48,31 @@ All other days, the feed will play a canned "we're off the air today" message.
 
 Since Alexa is primarily a US thing, the app uses Pacific time to determine what day it is / what to show.
 
-To get this up & running for yourself, you'll need to:
+## To get this up & running for yourself, you'll need to:
 
-1. Host your audio files in a public bucket on s3
-2. Configure the code to use your s3 bucket (just change the domain).
-3. [Deploy the Flask app as an AWS Lambda](https://developer.amazon.com/blogs/post/8e8ad73a-99e9-4c0f-a7b3-60f92287b0bf/new-alexa-tutorial-deploy-flask-ask-skills-to-aws-lambda-with-zappa) function using [Zappa](https://github.com/Miserlou/Zappa).
-4. [Follow these steps](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing & submit it for certification.
+1. Create a public s3 bucket for your audio files & configure the code to use your bucket.
+
+2. Set environment variables for s3 access & authorized numbers:
+
+```
+S3KI=derppppp
+S3SK=derpppppppppp
+
+NS=+1XXXXXXXXX
+RM=+1XXXXXXXXX
+SL=+1XXXXXXXXX
+
+SESSKEY=rand0mstr1ng
+```
+
+3. Deploy this hot mess to Heroku (or wherever - I originally deployed the feed code as an AWS Lambda).
+
+4. Point your Twilio number to `http://yourapp/begin_call`
+
+5. Call yourself and record a test message for today.
+
+6. Log in to s3 and verify the file is publicly accessible.
+
+7. [Follow these steps]( https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using your app's root URL.
+
+8. If it works, submit it for certification and tell all your friends to subscribe.
