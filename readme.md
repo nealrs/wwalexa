@@ -1,4 +1,8 @@
-## AlexaFeed
+# AlexaFeed
+
+[![video thumbnail](https://img.youtube.com/vi/SfQLD24O7zY/mqdefault.jpg)](https://youtu.be/SfQLD24O7zY)
+
+[Watch a demo on YouTube](https://youtu.be/SfQLD24O7zY)
 
 This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
@@ -6,9 +10,11 @@ This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
 2. Generating a dynamic Alexa Flash Briefing JSON feed based on the current date.
 
-[Click here for a live demo of the feed](https://wakeyio-alexa.herokuapp.com/).
+[Live demo of the feed](https://wakeyio-alexa.herokuapp.com/).
 
-[Click here to listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3). I haven't certified my skill yet, so that's why you can't subscribe to it / no full live demo (but I can give you beta access if you ask.) :see_no_evil:
+[Listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3).
+
+I haven't certified my skill yet, so that's why you can't subscribe to it -- but trust the video demo.
 
 ## Calling in Updates
 
@@ -48,7 +54,7 @@ All other days, the feed will play a canned "we're off the air today" message.
 
 Since Alexa is primarily a US thing, the app uses Pacific time to determine what day it is / what to show.
 
-## To get this up & running for yourself, you'll need to:
+## How to Use
 
 1. Create a public s3 bucket for your audio files & configure the code to use your bucket.
 
