@@ -1,4 +1,6 @@
-# intended function:
+# Call in your Alexa Flash Briefing / Generate a dynamic feed
+
+# How the fun / Twilio stuff works:
 #  Check caller against approved number list
 #  if approved caller, ask for date input as MMDD
 #  if valid date, record up to 3 min of audio (if not valid, start over)
@@ -6,8 +8,9 @@
 #  if acceptable, save to audio to s3 using date as filename. (s3 not implemented yet)
 #  if not acceptable, hangup.
 
-# issues / todo:
-# write post about how this all works :)
+# Main route / Alexa Feed:
+# Dynamically generates an audio JSON Alexa Flash Briefing feed, based on the day of the week.
+# Follow these steps: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using the main root URL for this app & submit it for certification.
 
 from flask import Flask, request, redirect, session
 from datetime import datetime
@@ -16,11 +19,14 @@ from twilio.twiml.voice_response import Gather, VoiceResponse, Say
 import boto3
 import requests
 import os
+import uuid
+import pytz
+import json
 
 app = Flask(__name__)
-app.secret_key = 'rand0mstr1ng'
+app.secret_key = os.environ['SESSKEY']
 
-#Add your number to the list to try it out!
+# Approved callers
 callers = {
 	os.environ['NS'] : "Neal",
 	os.environ['RM'] : "Richard",
@@ -56,7 +62,7 @@ def save_to_s3():
 		req_for_image = requests.get(session['mp3url'], stream=True)
 		file_object_from_req = req_for_image.raw
 		req_data = file_object_from_req.read()
-		print "got image stream"
+		print "got audio stream"
 
 		# Do the actual upload to s3
 		s3.put_object(Bucket="wakey.io", Key="alexa_audio/"+filename, Body=req_data)
@@ -69,7 +75,50 @@ def save_to_s3():
 		return False
 
 
-@app.route('/', methods=['GET', 'POST'])
+# Generate feed based on day of week
+@app.route('/', methods=['GET'])
+def index():
+
+    # establish current date in PT timezone
+    tz = pytz.timezone('America/Los_Angeles')
+    today = datetime.now(tz)
+    today_utc = today.astimezone(pytz.UTC)
+    date = today.strftime("%Y-%m-%d")
+    day = today.isoweekday()
+    date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
+
+    # debug lines for date info #
+    #print date
+    #print day
+    #print date_locale
+    #print today_utc
+    #print '\n'
+    #                           #
+
+    # build feed - follows spec: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/flash-briefing-skill-api-feed-reference#flash-briefing-skill-api-feed-quick-reference
+    feed = {}
+    feed['uid'] = str(uuid.uuid4())
+    feed['updateDate'] = today_utc.strftime('%Y-%m-%dT%H:%M:%S.0Z')
+    feed['mainText'] = '' # Automatically ignored, since this is an audio feed
+    #feed['redirectionURL'] = '' # I suppose you could use this, depending on how you structure your CMS
+
+    day = 4 # manual override for debugging
+    if day % 2 != 0:
+        print "broadcast day"
+        feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
+        feed['streamUrl'] = 'https://wakey.io/public/mp3/'+date+'.mp3'
+    else:
+        print "off-air day"
+        feed['titleText'] = 'Wakey Wakey airs Monday, Wednesday, and Friday.'
+        feed['streamUrl'] = 'https://wakey.io/public/mp3/offair.mp3'
+
+    feed_json = json.dumps(feed)
+    print feed_json
+    return feed_json
+
+
+# Pickup call & get date
+@app.route('/begin_call', methods=['GET', 'POST'])
 def begin_call():
 	print "start /begin_call"
 	from_number = request.values.get('From', None)
@@ -92,6 +141,7 @@ def begin_call():
 	return str(resp)
 
 
+# validate date & record audio
 @app.route("/set_date", methods=["GET", "POST"])
 def set_date():
 	print "start /set_date"
@@ -114,6 +164,7 @@ def set_date():
 	return str(resp)
 
 
+# replay audio & confirm scheduling
 @app.route("/play_schedule", methods=['GET', 'POST'])
 def play_schedule():
 	print "start /play_schedule"
@@ -132,6 +183,7 @@ def play_schedule():
 	return str(resp)
 
 
+# publish audio to s3 & end call
 @app.route("/save_finish", methods=["GET", "POST"])
 def save_finish():
 	print "start /save_finish"

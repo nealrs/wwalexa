@@ -1,0 +1,7 @@
+{
+  "name": "AlexaFeed",
+  "description": "Call in updates to & generate a dynamic Alexa Flash Breifing Feed",
+  "image": "heroku/python",
+  "repository": "https://github.com/nealrs/alexafeed",
+  "keywords": ["python", "flask", "mysql", "twilio", "mms", "sms", "alexa", "flash briefing", "echo" ]
+}
