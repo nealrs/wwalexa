@@ -88,11 +88,11 @@ def index():
     date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
 
     # debug lines for date info #
-    #print date
-    #print day
-    #print date_locale
-    #print today_utc
-    #print '\n'
+    print date
+    print day
+    print date_locale
+    print today_utc
+    print '\n'
     #                           #
 
     # build feed - follows spec: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/flash-briefing-skill-api-feed-reference#flash-briefing-skill-api-feed-quick-reference
