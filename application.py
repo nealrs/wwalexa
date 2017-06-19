@@ -77,31 +77,28 @@ def save_to_s3():
 
 
 def url_check(url):
-	ret = urllib2.urlopen(url)
+	"""ret = urllib2.urlopen(url)
 	if ret.code == 200:
-    	print "OK, we found that file"
-        return True
+		print "OK, we found that file"
+		return True
 	else:
 		print "NOPE, we,did not find that file"
-        #raise_for_status()
-        return False
-
-
-	"""ping = requests.get(url)
-    if ping.status_code == 200:
-        print(ping.status_code)
-        print "OK, we found that file"
-        return True
-    else:
-        print "NOPE, we,did not find that file"
-        #raise_for_status()
-        return False"""
+		return False"""
+	ping = requests.get(url)
+	if ping.status_code == 200:
+		print(ping.status_code)
+		print "OK, we found that file"
+		return True
+	else:
+		print "NOPE, we,did not find that file"
+		return False
 
 @app.route('/qc', methods=['GET'])
 def qc():
-	urls = ["https://nealshyam.com", "https://wakey.io/alexa_audio/2017-06-16.mp3", "https://wakey.io/alexa_audio/2017-06-17.mp3"]
+	urls = ["http://nealshyam.com", "http://wakey.io/alexa_audio/2017-06-16.mp3", "http://wakey.io/alexa_audio/2017-06-17.mp3"]
 	for url in urls:
-	    url_check(url)
+		print "trying: " + url
+		url_check(url)
 	return True
 
 # Generate feed based on day of week
