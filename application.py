@@ -82,60 +82,47 @@ def url_check(url):
 		print "OK, we found that file"
 		return True
 	else:
-		print "NOPE, we,did not find that file"
+		print "NOPE, we did not find that file"
 		return False
 
-@app.route('/qc', methods=['GET'])
-def qc():
-	urls = ["http://nealshyam.com", "http://wakey.io/alexa_audio/2017-06-16.mp3", "http://wakey.io/alexa_audio/2017-06-17.mp3"]
-	for url in urls:
-		print "trying: " + url
-		url_check(url)
-	return ""
 
 # Generate feed based on day of week
 @app.route('/', methods=['GET'])
 def index():
+	# establish current date in PT timezone
+	tz = pytz.timezone('America/Los_Angeles')
+	today = datetime.now(tz)
+	today_utc = today.astimezone(pytz.UTC)
+	date = today.strftime("%Y-%m-%d")
+	#day = today.isoweekday()
+	date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
 
-    # establish current date in PT timezone
-    tz = pytz.timezone('America/Los_Angeles')
-    today = datetime.now(tz)
-    today_utc = today.astimezone(pytz.UTC)
-    date = today.strftime("%Y-%m-%d")
-    day = today.isoweekday()
-    date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
+	# debug lines for date info #
+	print date
+	#print day
+	print date_locale
+	print today_utc
+	print '\n'
 
-    # debug lines for date info #
-    print date
-    print day
-    print date_locale
-    print today_utc
-    print '\n'
-    #                           #
+	feed = {}
+	feed['uid'] = str(uuid.uuid4())
+	feed['updateDate'] = today_utc.strftime('%Y-%m-%dT%H:%M:%S.0Z')
+	feed['mainText'] = ''
 
-    # build feed - follows spec: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/flash-briefing-skill-api-feed-reference#flash-briefing-skill-api-feed-quick-reference
-    feed = {}
-    feed['uid'] = str(uuid.uuid4())
-    feed['updateDate'] = today_utc.strftime('%Y-%m-%dT%H:%M:%S.0Z')
-    feed['mainText'] = '' # Automatically ignored, since this is an audio feed
-    #feed['redirectionURL'] = '' # I suppose you could use this, depending on how you structure your CMS
-
-    #day = 4 # manual override for debugging
-
-	url = 'https://wakey.io/alexa_audio/'+date+'.mp3'
+	url = "https://wakey.io/alexa_audio/" +date+ ".mp3"
 	print "checking for: " + url
 	if url_check(url):
 		print "on-air"
 		feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
 		feed['streamUrl'] = url
-    else:
-        print "off-air" # no content found
-        feed['titleText'] = 'Wakey Wakey is off-air right now, check back again soon!'
-        feed['streamUrl'] = 'https://wakey.io/alexa_audio/offair.mp3'
+	else:
+		print "off-air" # no content found
+		feed['titleText'] = 'Wakey Wakey is off-air right now, check back again soon!'
+		feed['streamUrl'] = 'https://wakey.io/alexa_audio/offair.mp3'
 
-    feed_json = json.dumps(feed)
-    print feed_json
-    return feed_json
+	feed_json = json.dumps(feed)
+	print feed_json
+	return feed_json
 
 
 # Pickup call & get date
