@@ -22,6 +22,7 @@ import os
 import uuid
 import pytz
 import json
+import urllib2
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
@@ -76,7 +77,17 @@ def save_to_s3():
 
 
 def url_check(url):
-    ping = requests.get(url)
+	ret = urllib2.urlopen(url)
+	if ret.code == 200:
+    	print "OK, we found that file"
+        return True
+	else:
+		print "NOPE, we,did not find that file"
+        #raise_for_status()
+        return False
+
+
+	"""ping = requests.get(url)
     if ping.status_code == 200:
         print(ping.status_code)
         print "OK, we found that file"
@@ -84,13 +95,14 @@ def url_check(url):
     else:
         print "NOPE, we,did not find that file"
         #raise_for_status()
-        return False
+        return False"""
 
 @app.route('/qc', methods=['GET'])
 def qc():
 	urls = ["https://nealshyam.com", "https://wakey.io/alexa_audio/2017-06-16.mp3", "https://wakey.io/alexa_audio/2017-06-17.mp3"]
 	for url in urls:
 	    url_check(url)
+	return True
 
 # Generate feed based on day of week
 @app.route('/', methods=['GET'])
