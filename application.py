@@ -22,7 +22,6 @@ import os
 import uuid
 import pytz
 import json
-import urllib2
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
@@ -77,16 +76,9 @@ def save_to_s3():
 
 
 def url_check(url):
-	"""ret = urllib2.urlopen(url)
-	if ret.code == 200:
-		print "OK, we found that file"
-		return True
-	else:
-		print "NOPE, we,did not find that file"
-		return False"""
 	ping = requests.get(url)
+	print(ping.status_code)
 	if ping.status_code == 200:
-		print(ping.status_code)
 		print "OK, we found that file"
 		return True
 	else:
@@ -99,7 +91,7 @@ def qc():
 	for url in urls:
 		print "trying: " + url
 		url_check(url)
-	return True
+	return ""
 
 # Generate feed based on day of week
 @app.route('/', methods=['GET'])
@@ -129,13 +121,16 @@ def index():
     #feed['redirectionURL'] = '' # I suppose you could use this, depending on how you structure your CMS
 
     #day = 4 # manual override for debugging
-    if day in [1, 3, 5]:
-        print "broadcast day"
-        feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
-        feed['streamUrl'] = 'https://wakey.io/alexa_audio/'+date+'.mp3'
+
+	url = 'https://wakey.io/alexa_audio/'+date+'.mp3'
+	print "checking for: " + url
+	if url_check(url):
+		print "on-air"
+		feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
+		feed['streamUrl'] = url
     else:
-        print "off-air day"
-        feed['titleText'] = 'Wakey Wakey airs Monday, Wednesday, and Friday.'
+        print "off-air" # no content found
+        feed['titleText'] = 'Wakey Wakey is off-air right now, check back again soon!'
         feed['streamUrl'] = 'https://wakey.io/alexa_audio/offair.mp3'
 
     feed_json = json.dumps(feed)
