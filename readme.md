@@ -1,8 +1,10 @@
 # AlexaFeed
 
+**TL;DR: Record a phone-call & use it to dynamically generate a JSON audio Alexa Flash Briefing feed.** [Watch a demo on YouTube](https://youtu.be/SfQLD24O7zY)
+
 [![video thumbnail](https://img.youtube.com/vi/SfQLD24O7zY/mqdefault.jpg)](https://youtu.be/SfQLD24O7zY)
 
-[Watch a demo on YouTube](https://youtu.be/SfQLD24O7zY)
+## In more detail
 
 This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
@@ -15,6 +17,37 @@ This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 [Listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3).
 
 I haven't certified my skill yet, so that's why you can't subscribe to it -- but trust the video demo.
+
+## Motivation
+
+AlexaFeed was an itch I had to scratch, motivated by a few things:
+
+1. My video project, Wakey Wakey](http://wakey.io), wasn't getting enough traction and required too much production time for each episode. It was time to explore different formats
+
+2. Blogging is boring, RSS is basically dead, and it seems like nobody reads beyond the headlines anymore.
+
+3. Podcasts are having a moment (again?), but producing &amp; distributing them is this endless chain of steps.
+
+4. Alexa has big market penetration among my friends & family. It's an excellent distribution platform for content, but most people use it for setting timers, listening to music, and checking the weather.
+
+5. Alexa's Flash Briefings are a first class feature, and support both text & audio briefings. And yet, there are very few orgs & content creators targeting this platform.
+
+6. I previously wrote a [Jekyll -> Flash Briefing plugin](https://gist.github.com/nealrs/e6985003ca56cc6f8c980efbb0d0e670), so you can _listen_ to your blog.
+
+7. Amazon recently introduced metrics for Flash Briefings.
+
+8. I noticed the upcoming Echo Show will support _video_ Flash Briefings...
+
+So, after ruminating on all that, I thought: what if me, Steve, and Richard (my other Wakey Wakey collaborators) could produce new content on our own, and then publish it to Alexa without ever having to touch a computer?
+
+Well, it used to be (and probably still is?) common practice for field reporters to call in their stories to the newsroom.
+
+You've probably you've seen it in _The Wire_ and similar journalism driven movies. Some super excited dude in a bar calls a grizzled vet in the newsroom to phone in a hot tip and just starts reciting new copy.
+
+So I created a digital newsroom, where approved reporters can call in stories, set an air date, and schedule them. And  then, on the appropriate day, content is published automatically to Alexa, where subscribers can "read" the news by asking for their flash briefing.
+
+So I guess it's like an audio newspaper? And with some code tweaks, you could support multiple news items a day, or replace the audio midway through the day for a "late edition."
+
 
 ## Calling in Updates
 
@@ -52,7 +85,7 @@ All other days, the feed will play a canned "we're off the air today" message.
 }
 ```
 
-Since Alexa is primarily a US thing, the app uses Pacific time to determine what day it is / what to show.
+Since Alexa is primarily a US thing, the app uses Pacific time to determine what day it is and what to show.
 
 ## How to Use
 
