@@ -94,12 +94,10 @@ def index():
 	today = datetime.now(tz)
 	today_utc = today.astimezone(pytz.UTC)
 	date = today.strftime("%Y-%m-%d")
-	#day = today.isoweekday()
 	date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
 
 	# debug lines for date info #
 	print date
-	#print day
 	print date_locale
 	print today_utc
 	print '\n'

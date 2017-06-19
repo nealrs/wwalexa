@@ -42,9 +42,9 @@ So, after ruminating on all that, I thought: what if me, Steve, and Richard (my 
 
 Well, it used to be (and probably still is?) common practice for field reporters to call in their stories to the newsroom.
 
-You've probably you've seen it in _The Wire_ and similar journalism driven movies. Some super excited dude in a bar calls a grizzled vet in the newsroom to phone in a hot tip and just starts reciting new copy.
+You've probably you've seen it in _The Wire_ and similar journalism driven movies. Some super excited dude in a bar calls a grizzled newsman in the bullpen and tells him to take all this down. Then, after hanging up, the newsman cranks out a story and submits it before deadline. Neat, right?
 
-So I created a digital newsroom, where approved reporters can call in stories, set an air date, and schedule them. And  then, on the appropriate day, content is published automatically to Alexa, where subscribers can "read" the news by asking for their flash briefing.
+So, I created a digital newsroom, where approved reporters can call in stories, set an air date, and schedule them. And  then, on the appropriate day, content is published automatically to Alexa, where subscribers can "read" the news by asking for their flash briefing.
 
 So I guess it's like an audio newspaper? And with some code tweaks, you could support multiple news items a day, or replace the audio midway through the day for a "late edition."
 
@@ -61,7 +61,7 @@ Once confirmed, the app will tell you to rock on and hangup. And boom, you've re
 
 ## The Feed
 
-As configured, on Monday, Wednesday, and Friday, your briefing will play an audio file based on the current date (YYYY-MM-DD.mp3).
+When you load the feed url, the server will look for an mp3 file based on the current date: `YYYY-MM-DD.mp3`.
 
 ```
 {
@@ -73,19 +73,19 @@ As configured, on Monday, Wednesday, and Friday, your briefing will play an audi
 }
 ```
 
-All other days, the feed will play a canned "we're off the air today" message.
+If it can't find a file for that day, it'll play a canned "we're off the air today" message.
 
 ```
 {
   streamUrl: "https://wakey.io/public/mp3/offair.mp3",
   mainText: "",
   uid: "090b085e-f208-4431-9459-0bfd5d323888",
-  titleText: "Wakey Wakey airs Monday, Wednesday, and Friday.",
+  titleText: "Wakey Wakey is off-air right now, check back again soon!",
   updateDate: "2017-06-15T06:05:02.0Z"
 }
 ```
 
-Since Alexa is primarily a US thing, the app uses Pacific time to determine what day it is and what to show.
+Since Alexa is primarily a US thing, the app uses Pacific time to determine what day/time it is.
 
 ## How to Use
 
