@@ -59,6 +59,10 @@ If you are satisfied with your recording, you press `1` and the app will upload 
 
 Once confirmed, the app will tell you to rock on and hangup. And boom, you've recorded a new episode for your flash briefing!!
 
+_FYI_: The [official Alexa Feed spec](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/flash-briefing-skill-api-feed-reference) specifies a particular loudness for audio content and Twilio's recording quality isn't perfect.
+
+Alexa isn't super forgiving when it comes to audio loudness. It's pretty common for audio briefings to play softly because the engineer, didn't you know, _engineer_ it. So I went down the rabbit hole and incorporated an FFmpeg pipeline to adjust the loudness do some hi/lo pass filtering. It means you'll need to install ffmpeg as a separate buildpack on Heroku - but it also works SUPER WELL.
+
 ## The Feed
 
 When you load the feed url, the server will look for an mp3 file based on the current date: `YYYY-MM-DD.mp3`.
@@ -104,7 +108,7 @@ SL=+1XXXXXXXXX
 SESSKEY=rand0mstr1ng
 ```
 
-3. Deploy this hot mess to Heroku (or wherever - I originally deployed the feed code as an AWS Lambda).
+3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.
 
 4. Point your Twilio number to `http://yourapp/begin_call`
 
@@ -115,3 +119,5 @@ SESSKEY=rand0mstr1ng
 7. [Follow these steps]( https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using your app's root URL.
 
 8. If it works, submit it for certification and tell all your friends to subscribe.
+
+9. Keep publishing new content!!
