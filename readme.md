@@ -22,7 +22,7 @@ I haven't certified my skill yet, so that's why you can't subscribe to it -- but
 
 AlexaFeed was an itch I had to scratch, motivated by a few things:
 
-1. My video project, Wakey Wakey](http://wakey.io), wasn't getting enough traction and required too much production time for each episode. It was time to explore different formats
+1. My video project, [Wakey Wakey](http://wakey.io), wasn't getting enough traction and required too much production time for each episode. It was time to explore different formats
 
 2. Blogging is boring, RSS is basically dead, and it seems like nobody reads beyond the headlines anymore.
 
