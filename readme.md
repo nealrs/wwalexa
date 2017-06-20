@@ -63,6 +63,20 @@ _FYI_: The [official Alexa Feed spec](https://developer.amazon.com/public/soluti
 
 Alexa isn't super forgiving when it comes to audio loudness. It's pretty common for audio briefings to play softly because the engineer, didn't you know, _engineer_ it. So I went down the rabbit hole and incorporated an FFmpeg pipeline to adjust the loudness do some hi/lo pass filtering. It means you'll need to install ffmpeg as a separate buildpack on Heroku - but it also works SUPER WELL.
 
+## Emailing in Updates
+
+I also built an endpoint using Mailgun so that approved users can EMAIL in their audio updates as well. I suppose you could comment all of the email code out, but it's kind of neat.
+
+Message format:
+
+1. Subject line should be a date in `YYYY-MM-DD` format
+2. Message should include a _single_ mp3 attachment and nothing else.
+3. Message body will be ignored
+
+Approved emailers should receive success/failure confirmation.
+
+Not sure if Alexa supports mixed text/audio briefings - but if it does, this could be a fun way to add text clips to your feed.
+
 ## The Feed
 
 When you load the feed url, the server will look for an mp3 file based on the current date: `YYYY-MM-DD.mp3`.
@@ -95,7 +109,7 @@ Since Alexa is primarily a US thing, the app uses Pacific time to determine what
 
 1. Create a public s3 bucket for your audio files & configure the code to use your bucket.
 
-2. Set environment variables for s3 access & authorized numbers:
+2. Set environment variables for s3 access, authorized numbers & emailers, and Mailgun API keys:
 
 ```
 S3KI=derppppp
@@ -106,6 +120,13 @@ RM=+1XXXXXXXXX
 SL=+1XXXXXXXXX
 
 SESSKEY=rand0mstr1ng
+
+NSE=foo@bar.baz
+RME=foo@bar.baz
+SLE=foo@bar.baz
+
+MAILGUNDOMAIN=https://api.mailgun.net/v3/foobar
+MAILGUNKEY=key-xxxx8765309xxxx
 ```
 
 3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.

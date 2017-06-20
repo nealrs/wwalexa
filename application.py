@@ -35,6 +35,65 @@ callers = {
 	os.environ['SL'] : "Steve"
 }
 
+emailers = {
+	os.environ['NSE'] : "Neal",
+	os.environ['RME'] : "Richard",
+	os.environ['RME2'] : "Richard",
+	os.environ['SLE'] : "Steve"
+}
+
+# save file to s3
+def s3save(filename, fileobj):
+	try:
+		s3 = boto3.client( 's3', aws_access_key_id=os.environ['S3KI'], aws_secret_access_key=os.environ['S3SK'])
+		print "Connected to s3!!"
+
+		s3.put_object(Bucket="wakey.io", Key="alexa_audio/"+filename, Body=fileobj)
+		print "uploaded " + filename+ " to s3!"
+		return True
+	except Exception as e:
+		print "Error saving to s3"
+		raise
+		return False
+
+
+# download audio file from twilio and return file object
+def getaudio(audiourl):
+	try:
+		# get file stream
+		req_for_image = requests.get(audiourl, stream=True)
+		file_object_from_req = req_for_image.raw
+		req_data = file_object_from_req.read()
+		print "Retreived audio stream!!"
+		return req_data
+	except Exception as e:
+		print "Error retreiving audio stream"
+		raise
+		#return False
+
+
+# amplify audio file using streams & ffmpeg
+def amplify(audio):
+	try:
+		ff = FFmpeg(
+		inputs={"pipe:0":None},
+		outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
+		print ff.cmd
+
+		stdout, stderr = ff.run(
+			input_data=audio,
+			stdout=subprocess.PIPE)
+		#print stdout
+		#print stderr
+		print "Amplified audio!!"
+		return stdout
+	except Exception as e:
+		print "Error amplifying audio stream"
+		raise
+		#return False
+
+
+# validate date (works for 2017 only right now)
 def isvaliddate(month, day):
     correctDate = None
     try:
@@ -45,39 +104,7 @@ def isvaliddate(month, day):
     return correctDate
 
 
-def save_to_s3():
-	print "recording url: " + session['mp3url']
-	filename = session['airdate'].strftime("%Y-%m-%d")+".mp3"
-	print "filename: " + filename
-
-	# download/save url to s3
-	try:
-		# connect to s3
-		s3 = boto3.client(
-		    's3',
-		    aws_access_key_id=os.environ['S3KI'],
-		    aws_secret_access_key=os.environ['S3SK']
-		)
-		print "connected to s3"
-
-		# get file stream
-		req_for_image = requests.get(session['mp3url'], stream=True)
-		file_object_from_req = req_for_image.raw
-		req_data = file_object_from_req.read()
-		print "got audio stream"
-
-		# Do the actual upload to s3
-		s3.put_object(Bucket="wakey.io", Key="alexa_audio/"+filename, Body=req_data)
-		print "uploaded " + filename+ " to s3"
-		return True
-
-	except Exception as e:
-		print "Error uploading " + filename+ " to s3"
-		raise
-		return False
-
-
-def save_to_s3_alt():
+def save_to_s3_CLASSIC():
 	print "recording url: " + session['mp3url']
 	filename = session['airdate'].strftime("%Y-%m-%d")+".mp3"
 	print "filename: " + filename
@@ -101,15 +128,15 @@ def save_to_s3_alt():
 		#AMPLIFY!!!!
 		ff = FFmpeg(
 		    inputs={"pipe:0":None},
-		    outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14::TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
+		    outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
 		print ff.cmd
 
 		stdout, stderr = ff.run(
 		    input_data=req_data,
 		    stdout=subprocess.PIPE)
 
-		print stdout
-		print stderr
+		#print stdout
+		#print stderr
 		print "normalized audio"
 
 		# Upload to s3
@@ -123,6 +150,49 @@ def save_to_s3_alt():
 		return False
 
 
+def save_to_s3_twilio():
+	print "recording url: " + session['mp3url']
+	filename = session['airdate'].strftime("%Y-%m-%d")+".mp3"
+	print "filename: " + filename
+
+	# download, process, and save url to s3
+	try:
+		# get audio file stream
+		audio = getaudio(session['mp3url'])
+
+		# amplify audio
+		amped_audio = amplify(audio)
+
+		# upload to s3
+		return s3save(filename, amped_audio)
+
+	except Exception as e:
+		print "Error getting, processing, or saving " + filename
+		raise
+		return False
+
+
+def save_to_s3_email(date, file_obj):
+	filename = date.strftime("%Y-%m-%d")+".mp3"
+	print "filename: " + filename
+
+	# download, process, and save url to s3
+	try:
+		# get audio file stream
+		#audio = getaudio(session['mp3url'])
+
+		# amplify audio
+		amped_audio = amplify(file_obj)
+
+		# upload to s3
+		return s3save(filename, amped_audio)
+
+	except Exception as e:
+		print "Error getting, processing, or saving " + filename
+		raise
+		return False
+
+
 def url_check(url):
 	ping = requests.get(url)
 	print(ping.status_code)
@@ -131,6 +201,20 @@ def url_check(url):
 		return True
 	else:
 		print "NOPE, we did not find that file"
+		return False
+
+def emailback(email, subject, body):
+	try:
+		resp = requests.post(
+        os.environ['MAILGUNDOMAIN']+"/messages",
+        auth=("api", os.environ['MAILGUNKEY']),
+        data={"from": "AlexaFeed <alexa@neal.rs>",
+              "to": [email],
+              "subject": subject,
+              "text": body})
+	except Exception as e:
+		print "Error sending email"
+		raise
 		return False
 
 
@@ -246,7 +330,7 @@ def save_finish():
 	if digits == 1:
 		resp.say("Alright, give me a hot second...")
 		# save file to s3 with correct date as filename and end call
-		if save_to_s3_alt() is True:
+		if save_to_s3_twilio() is True:
 			resp.say("And boom, you're good to go! See you next time " + session['caller'] +" !")
 		else:
 			resp.say("Yikes "+ session['caller'] + " we ran into an error saving to s3. Can you try calling in again? Sorry!!")
@@ -256,6 +340,41 @@ def save_finish():
 	resp.hangup()
 	session.clear()
 	return str(resp)
+
+# process incoming email via mailgun routes (SUPER HACKY!!!)
+@app.route("/email", methods=["GET", "POST"])
+def email():
+	sender = request.form['sender']
+	date = request.form['subject']
+	month = int(date[5:-3].lstrip("0").replace(" 0", " "))
+	day = int(date[-2:].lstrip("0").replace(" 0", " "))
+	print "From: "+ sender
+	print "subject: "+ date
+
+	if sender in emailers:
+		print "It's an email from "+ emailers[sender]
+
+		if isvaliddate(month, day) is True:
+			fndate = datetime(2017,month,day)
+			print "airdate: "+ fndate.strftime("%A, %B %-d, %Y")
+
+			print "audio file: "+ request.files.values()[0].filename
+			data = request.files.values()[0].stream.read()
+
+			if save_to_s3_email(fndate, data) is True:
+				print request.files.values()[0].filename+" saved!"
+				emailback(sender, "Your WW airs "+ fndate.strftime("%A, %B %-d, %Y"), emailers[sender]+ ", we successfully scheduled your episode.\n\nDon't reply to this email.")
+				return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+			else:
+				print "error saving "+attachment.filename
+				emailback(sender, "Error saving your WW ep to S3", "Try again? \n\nDon't reply to this email.")
+				return json.dumps({'file_saved':False}), 200, {'ContentType':'application/json'}
+		else:
+			print "incorrectly formatted date "+date
+			emailback(sender, "Error in your WW airdate", "Try again - and remember - your subject line should be 'YYYY-MM-DD', and that's it.\n\nDon't reply to this email.")
+			return json.dumps({'date_correct':False}), 200, {'ContentType':'application/json'}
+	else:
+		return json.dumps({'good_email':False}), 200, {'ContentType':'application/json'}
 
 if __name__ == "__main__":
 	app.run(debug=True)
