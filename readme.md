@@ -131,7 +131,7 @@ MAILGUNKEY=key-xxxx8765309xxxx
 
 3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.
 
-4. Point your Twilio number to `http://yourapp/begin_call`
+4. Point your Twilio number to `https://youapp.com/begin_call`. And optionally, set up a Mailgun route and forward incoming requests to `https://youapp.com/email`.
 
 5. Call yourself and record a test message for today.
 
