@@ -22,6 +22,8 @@ import os
 import uuid
 import pytz
 import json
+from ffmpy import FFmpeg
+import subprocess
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
@@ -66,6 +68,52 @@ def save_to_s3():
 
 		# Do the actual upload to s3
 		s3.put_object(Bucket="wakey.io", Key="alexa_audio/"+filename, Body=req_data)
+		print "uploaded " + filename+ " to s3"
+		return True
+
+	except Exception as e:
+		print "Error uploading " + filename+ " to s3"
+		raise
+		return False
+
+
+def save_to_s3_alt():
+	print "recording url: " + session['mp3url']
+	filename = session['airdate'].strftime("%Y-%m-%d")+".mp3"
+	print "filename: " + filename
+
+	# download/save url to s3
+	try:
+		# connect to s3
+		s3 = boto3.client(
+		    's3',
+		    aws_access_key_id=os.environ['S3KI'],
+		    aws_secret_access_key=os.environ['S3SK']
+		)
+		print "connected to s3"
+
+		# get file stream
+		req_for_image = requests.get(session['mp3url'], stream=True)
+		file_object_from_req = req_for_image.raw
+		req_data = file_object_from_req.read()
+		print "got audio stream"
+
+		#AMPLIFY!!!!
+		ff = FFmpeg(
+		    inputs={"pipe:0":None},
+		    outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:LRA=1\" -b:a 256k -f mp3"} )
+		print ff.cmd
+
+		stdout, stderr = ff.run(
+		    input_data=req_data,
+		    stdout=subprocess.PIPE)
+
+		print stdout
+		print stderr
+		print "normalized audio"
+
+		# Upload to s3
+		s3.put_object(Bucket="wakey.io", Key="alexa_audio/"+filename, Body=stdout)
 		print "uploaded " + filename+ " to s3"
 		return True
 
@@ -198,7 +246,7 @@ def save_finish():
 	if digits == 1:
 		resp.say("Alright, give me a hot second...")
 		# save file to s3 with correct date as filename and end call
-		if save_to_s3() is True:
+		if save_to_s3_alt() is True:
 			resp.say("And boom, you're good to go! See you next time " + session['caller'] +" !")
 		else:
 			resp.say("Yikes "+ session['caller'] + " we ran into an error saving to s3. Can you try calling in again? Sorry!!")
