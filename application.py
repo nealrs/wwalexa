@@ -101,7 +101,7 @@ def save_to_s3_alt():
 		#AMPLIFY!!!!
 		ff = FFmpeg(
 		    inputs={"pipe:0":None},
-		    outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:LRA=1\" -b:a 256k -f mp3"} )
+		    outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14::TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
 		print ff.cmd
 
 		stdout, stderr = ff.run(
