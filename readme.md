@@ -65,13 +65,13 @@ Alexa isn't super forgiving when it comes to audio loudness. It's pretty common 
 
 ## Emailing in Updates
 
-I also built an endpoint using Mailgun so that approved users can EMAIL in their audio updates as well. I suppose you could comment all of the email code out, but it's kind of neat.
+I also built an endpoint using Mailgun so that approved users can _email_ in audio files. Why? Because maybe you are some master podcaster and already have a workflow to record & master your audio.
 
 Message format:
 
-1. Subject line should be a date in `YYYY-MM-DD` format
-2. Message should include a _single_ mp3 attachment and nothing else.
-3. Message body will be ignored
+1. Subject line should be a date in `YYYY-MM-DD` format.
+2. Message must include a _single_ mp3 attachment and nothing else.
+3. Everything else in the email will be ignored.
 
 Approved emailers should receive success/failure confirmation.
 
