@@ -12,7 +12,7 @@
 # Dynamically generates an audio JSON Alexa Flash Briefing feed, based on the day of the week.
 # Follow these steps: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using the main root URL for this app & submit it for certification.
 
-from flask import Flask, request, redirect, session
+from flask import Flask, request, redirect, session, render_template
 from datetime import datetime
 from time import gmtime, strftime
 from twilio.twiml.voice_response import Gather, VoiceResponse, Say
@@ -42,6 +42,48 @@ emailers = {
 	os.environ['RME2'] : "Richard",
 	os.environ['SLE'] : "Steve"
 }
+
+# get date components (month, day, year) from s3 filenames
+def getdatefromfilename(text):
+    #print "*"+text+"*"
+    day = int(text[-6:-4].lstrip("0").replace(" 0", " "))
+    month = int(text[5:-7].lstrip("0").replace(" 0", " "))
+    year = int(text[:4])
+    return month, day, year
+
+def geteps():
+	try:
+		s3 = boto3.client( 's3',
+		    aws_access_key_id=os.environ['S3KI'],
+		    aws_secret_access_key=os.environ['S3SK'])
+		print "Connected to s3!!"
+		resp = s3.list_objects_v2(
+		    Bucket="wakey.io",
+		    Prefix="alexa_audio/")
+		data = dict()
+		data["offairs"] = []
+		data["episodes"] = []
+
+		for o in resp['Contents']:
+			print "filename: "+ o['Key']
+			fn = o['Key'].replace('alexa_audio/','')
+		    #print "*"+fn+"*"
+			if "offair" in fn:
+				data["offairs"].append(fn[:-4])
+			elif fn is "":
+				pass
+			else:
+				month, day, year = getdatefromfilename(fn)
+				if isvaliddate(month, day, year) is True:
+					data["episodes"].append(fn[:-4])
+		print "Retreived episode list!!"
+		print data
+		return data
+
+	except Exception as e:
+		print "Error talking to s3"
+		raise
+		return False
 
 # save file to s3
 def s3save(filename, fileobj):
@@ -94,11 +136,11 @@ def amplify(audio):
 		#return False
 
 
-# validate date (works for 2017 only right now)
-def isvaliddate(month, day):
+# validate date (assumes current year, unless specified - call ins always assumes current year)
+def isvaliddate(month, day, year=(datetime.now().year)):
     correctDate = None
     try:
-        newDate = datetime(2017, month, day)
+        newDate = datetime(year, month, day)
         correctDate = True
     except ValueError:
         correctDate = False
@@ -204,6 +246,7 @@ def url_check(url):
 		print "NOPE, we did not find that file"
 		return False
 
+
 def emailback(email, subject, body):
 	try:
 		resp = requests.post(
@@ -254,6 +297,20 @@ def index():
 	feed_json = json.dumps(feed)
 	print feed_json
 	return feed_json
+
+
+# generate list of episodes & offairs w/ html5 audio players
+@app.route('/episodes', methods=['GET'])
+def episodes():
+	data = geteps()
+	if data:
+		return render_template(
+			'episodes.html',
+			phone=os.environ['PHONE'],
+			email=os.environ['EMAIL'],
+            data=data)
+	else:
+		return render_template('error.html')
 
 
 # Pickup call & get date
@@ -349,14 +406,15 @@ def email():
 	date = request.form['subject']
 	month = int(date[5:-3].lstrip("0").replace(" 0", " "))
 	day = int(date[-2:].lstrip("0").replace(" 0", " "))
+	year = int(date[:4])
 	print "From: "+ sender
 	print "subject: "+ date
 
 	if sender in emailers:
 		print "It's an email from "+ emailers[sender]
 
-		if isvaliddate(month, day) is True:
-			fndate = datetime(2017,month,day)
+		if isvaliddate(month, day, year) is True:
+			fndate = datetime(year,month,day)
 			print "airdate: "+ fndate.strftime("%A, %B %-d, %Y")
 
 			print "audio file: "+ request.files.values()[0].filename
