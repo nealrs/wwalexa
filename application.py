@@ -24,6 +24,7 @@ import pytz
 import json
 from ffmpy import FFmpeg
 import subprocess
+from random import randint
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
@@ -248,7 +249,7 @@ def index():
 	else:
 		print "off-air" # no content found
 		feed['titleText'] = 'Wakey Wakey is off-air right now, check back again soon!'
-		feed['streamUrl'] = 'https://wakey.io/alexa_audio/offair.mp3'
+		feed['streamUrl'] = "https://wakey.io/alexa_audio/offair_"+str(randint(0, 4))+".mp3"
 
 	feed_json = json.dumps(feed)
 	print feed_json
