@@ -1,0 +1,43 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <title>Wakey Wakey Episode List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+  <p><a href="/">Live feed</a> ~ <a href="phone:{{ phone }}">Call</a> or <a href="mailto:{{ email }}?subject=XXXX-MM-DD">Email</a> in a new episode</p>
+
+  <h3>Episodes</h3>
+
+  {% if data.episodes %}
+    {% for file in data.episodes %}
+      <p>
+        <a href="https://wakey.io/alexa_audio/{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="https://wakey.io/alexa_audio/{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
+      </p>
+    {% endfor %}
+  {% else %}
+    <p>No episodes found, go record one!</p>
+  {% endif %}
+
+  <h3>Offairs</h3>
+
+  {% if data.offairs %}
+    {% for file in data.offairs %}
+      <p>
+        <a href="https://wakey.io/alexa_audio/{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="https://wakey.io/alexa_audio/{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
+      </p>
+    {% endfor %}
+  {% else %}
+    <p>No offairs found, go record some!</p>
+  {% endif %}
+
+<p>&copy; 2017 Wakey Wakey</p>
+
+
+</body>
+</html>
