@@ -1,6 +1,8 @@
 # AlexaFeed
 
-**TL;DR: Record a phone-call & use it to dynamically generate a JSON audio Alexa Flash Briefing feed.** [Watch a demo on YouTube](https://youtu.be/SfQLD24O7zY)
+**TL;DR: Record a phone-call & use it to dynamically generate a JSON audio Alexa Flash Briefing feed.**
+
+[Watch a demo on YouTube](https://youtu.be/SfQLD24O7zY).
 
 [![video thumbnail](https://img.youtube.com/vi/SfQLD24O7zY/mqdefault.jpg)](https://youtu.be/SfQLD24O7zY)
 
@@ -16,7 +18,7 @@ This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
 [Listen a recording from June 16th](https://wakey.io/alexa_audio/2017-06-16.mp3).
 
-I haven't certified my skill yet, so that's why you can't subscribe to it -- but trust the video demo.
+[Add this skill](https://www.amazon.com/Neal-Shyam-Wakey/dp/B072LFK83G/ref=sr_1_1?s=digital-skills&ie=UTF8&qid=1497901445&sr=1-1&keywords=wakey+wakey) to your Alexa Flash Briefing and try it live!
 
 ## Motivation
 
@@ -65,7 +67,7 @@ Alexa isn't super forgiving when it comes to audio loudness. It's pretty common 
 
 ## Emailing in Updates
 
-I also built an endpoint using Mailgun so that approved users can _email_ in audio files. Why? Because maybe you are some master podcaster and already have a workflow to record & master your audio.
+I also built an endpoint using Mailgun so that approved users can _email_ in audio files. Why? Because maybe you are some master podcaster and already have a workflow to record & master your audio. Also, Twilio isn't free.
 
 Message format:
 
