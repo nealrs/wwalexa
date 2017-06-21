@@ -329,7 +329,7 @@ def begin_call():
 		gather = Gather(input='dtmf', timeout=10, num_digits=4, action='/set_date', method='GET')
 		gather.say("Let's record a new Wakey Wakey!\n First, when will this episode air?\n Use the keypad to set the air date using a Month Month Day Day format, followed by the pound key.\n For example, 10 31 would be Halloween.\n But remember, we only air on Monday, Wednesday, and Friday.")
 		resp.append(gather)
-		resp.say("Hey, so when will this episode air?")
+		resp.say("You didn't give me a date. Bye!")
 	else:
 		resp.say("Hey, this isn't for you. \nBoy Bye!")
 		resp.hangup()
@@ -372,10 +372,10 @@ def play_schedule():
 	# SCHEDULE
 	print "Gather digits for scheduling"
 	resp.say("Ok, we're almost done.")
-	gather = Gather(input='dtmf', timeout=10, num_digits=1, action='/save_finish', method='GET')
+	gather = Gather(input='dtmf', timeout=15, num_digits=1, action='/save_finish', method='GET')
 	gather.say('To schedule this episode, press 1. Otherwise, hang up.')
 	resp.append(gather)
-	resp.say("Hey, we good?")
+	resp.say("Uhm, ok, hanging up now.")
 	return str(resp)
 
 
