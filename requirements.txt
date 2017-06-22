@@ -5,3 +5,4 @@ boto3==1.4.4
 Flask==0.12.2
 gunicorn==0.14.2
 ffmpy==0.2.2
+parsedatetime==2.4

@@ -25,6 +25,7 @@ import json
 from ffmpy import FFmpeg
 import subprocess
 from random import randint
+import parsedatetime as pdt
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
@@ -326,8 +327,8 @@ def begin_call():
 	resp = VoiceResponse()
   	if session['caller'] != "unknown":
 		resp.say("Hey " + session['caller'] + "!")
-		gather = Gather(input='dtmf', timeout=10, num_digits=4, action='/set_date', method='GET')
-		gather.say("Let's record a new Wakey Wakey!\n First, when will this episode air?\n Use the keypad to set the air date using a Month Month Day Day format, followed by the pound key.\n For example, 10 31 would be Halloween.\n But remember, we only air on Monday, Wednesday, and Friday.")
+		gather = Gather(input='dtmf speech', timeout=5, num_digits=4, action='/set_date', method='GET')
+		gather.say("Let's record a new Wakey Wakey!\n First, when will this episode air?\n Say the air date or punch it in using a Month Month Day Day format.\n For example, you could say October 31st or punch in 10 31.")
 		resp.append(gather)
 		resp.say("You didn't give me a date. Bye!")
 	else:
@@ -343,11 +344,27 @@ def set_date():
 	print "start /set_date"
 	resp = VoiceResponse()
 	digits = request.values.get('Digits', None)
-	month = int(digits[:2].lstrip("0").replace(" 0", " "))
-	day = int(digits[-2:].lstrip("0").replace(" 0", " "))
+	speech = request.values.get('SpeechResult', None)
+	print "dtmf digits: "+ str(digits)
+	#print "speech recognition: " + speech
+	#month=0
+	#digits=0
+	year=datetime.now().year
 
-	if isvaliddate(month, day) is True:
-		session['airdate'] = datetime(2017,month,day)
+	if speech:
+		cal = pdt.Calendar()
+		time, status = cal.parse(speech)
+		spoken_date = datetime(*time[:6])
+		print "spoken date: "+ spoken_date.strftime("%A, %B %-d, %Y")
+		month = spoken_date.month
+		day = spoken_date.day
+		year = spoken_date.year
+	else:
+		month = int(str(digits[:2]).lstrip("0").replace(" 0", " "))
+		day = int(str(digits[-2:]).lstrip("0").replace(" 0", " "))
+
+	if isvaliddate(month, day, year) is True:
+		session['airdate'] = datetime(year,month,day)
 		print session['airdate'].strftime("%A, %B %-d, %Y")
 
 		resp.say("Ok " + session['caller'] + ", this episode will air "+ session['airdate'].strftime("%A, %B %-d, %Y"))
