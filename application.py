@@ -128,6 +128,39 @@ def getepsiTunes():
 		raise
 		return False
 
+
+# get latest episode
+# get all episodes with additional file data(for iTunes feed)
+def getlatest():
+	try:
+		s3 = boto3.client( 's3',
+		    aws_access_key_id=os.environ['S3KI'],
+		    aws_secret_access_key=os.environ['S3SK'])
+		print "Connected to s3!!"
+		resp = s3.list_objects_v2(
+		    Bucket="wakey.io",
+		    Prefix="alexa_audio/")
+		tmp = []
+
+		for o in resp['Contents']:
+			fn = o['Key'].replace('alexa_audio/','')
+			if "offair" in fn or fn is "":
+				pass
+			else:
+				#print fn
+				month, day, year, date = getdatefromfilename(fn)
+				if isvaliddate(month, day, year) is True and isnotfuturedate(month, day, year) is True:
+					tmp.append(fn)
+
+			print tmp
+
+		print "latest episode is: "+ tmp[-1]
+		return tmp[-1]
+	except Exception as e:
+		print "Error talking to s3"
+		raise
+		return False
+
 # save file to s3
 def s3save(filename, fileobj):
 	try:
@@ -357,7 +390,7 @@ def index():
 	return feed_json
 
 
-# generate list of episodes & offairs w/ html5 audio players
+# return list of episodes & offairs w/ html5 audio players (kind of like an admin dashboard, but unprotected right now)
 @app.route('/episodes', methods=['GET'])
 def episodes():
 	data = geteps()
@@ -371,7 +404,20 @@ def episodes():
 		return render_template('error.html')
 
 
-# generate iTunes podcast feed xml (does not include -future- episodes)
+# return latest episode filename (with prefix)
+@app.route('/latest', methods=['GET'])
+def latest():
+
+	fn = getlatest()
+	date = fn[:-4]
+
+	latest = {"date": date, "filename": "https://wakey.io/"+ fn}
+
+	feed_json = json.dumps(latest)
+	print feed_json
+	return feed_json
+
+# return iTunes podcast feed xml (does not include -future- episodes)
 @app.route('/podcast', methods=['GET'])
 def podcast():
 	data = getepsiTunes()
@@ -531,4 +577,4 @@ def email():
 		return json.dumps({'good_email':False}), 200, {'ContentType':'application/json'}
 
 if __name__ == "__main__":
-	app.run(debug=True)
+	app.run(debug=False)
