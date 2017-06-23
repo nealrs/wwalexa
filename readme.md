@@ -16,7 +16,7 @@ This Flask app creates audio Flash Briefings for Alexa by doing 2 things:
 
 [Live demo of the feed](https://wakeyio-alexa.herokuapp.com/).
 
-[Listen a recording from June 23r](https://www.wakey.io/alexa_audio/2017-06-23.mp3).
+[Listen a recording from June 23rd](https://www.wakey.io/alexa_audio/2017-06-23.mp3).
 
 [Add this skill](https://www.amazon.com/Neal-Shyam-Wakey/dp/B072LFK83G/ref=sr_1_1?s=digital-skills&ie=UTF8&qid=1497901445&sr=1-1&keywords=wakey+wakey) to your Alexa Flash Briefing and try it live!
 
