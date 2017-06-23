@@ -6,3 +6,4 @@ Flask==0.12.2
 gunicorn==0.14.2
 ffmpy==0.2.2
 parsedatetime==2.4
+flask_cors=3.0.2

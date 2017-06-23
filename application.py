@@ -13,6 +13,7 @@
 # Follow these steps: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using the main root URL for this app & submit it for certification.
 
 from flask import Flask, request, redirect, session, render_template, Response, make_response
+from flask_cors import CORS, cross_origin
 from datetime import datetime
 from time import gmtime, strftime, mktime
 from twilio.twiml.voice_response import Gather, VoiceResponse, Say
@@ -29,8 +30,8 @@ import parsedatetime as pdt
 from email import utils
 
 app = Flask(__name__)
+#cors = CORS(app, resources={r"/latest/*": {"origins": "*"}})
 app.secret_key = os.environ['SESSKEY']
-
 # Approved callers
 callers = {
 	os.environ['NS'] : "Neal",
@@ -406,6 +407,7 @@ def episodes():
 
 # return latest episode filename (with prefix)
 @app.route('/latest', methods=['GET'])
+@cross_origin()
 def latest():
 
 	fn = getlatest()
