@@ -354,7 +354,7 @@ def getTime():
 	today = datetime.now(tz)
 	today_utc = today.astimezone(pytz.UTC)
 	date = today.strftime("%Y-%m-%d")
-	date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
+	date_locale = today.strftime("%a, %B %d")
 
 	# debug lines for date info #
 	#print date
@@ -412,8 +412,10 @@ def latest():
 
 	fn = getlatest()
 	date = fn[:-4]
+	m, d, y, dt = getdatefromfilename(fn)
+	nice_date = dt.strftime("%B %d, %Y")
 
-	latest = {"date": date, "filename": "https://wakey.io/"+ fn}
+	latest = {"date": date, "nice_date": nice_date, "filename": "https://wakey.io/alexa_audio/"+ fn}
 
 	feed_json = json.dumps(latest)
 	print feed_json
