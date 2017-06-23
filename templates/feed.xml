@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
+
+  <channel>
+    <title>Wakey Wakey</title>
+    <link>https://wakeyio-alexa.herokuapp.com/episodes</link>
+    <itunes:author>Wakey Wakey</itunes:author>
+    <copyright>&#xA9; {{date.year}} Wakey.io.</copyright>
+    <language>en-us</language>
+    <pubDate>{{date}}</pubDate>
+    <lastBuildDate>{{date}}</lastBuildDate>
+    <itunes:category text="News &amp; Politics"></itunes:category>
+    <itunes:explicit>No</itunes:explicit>
+    <itunes:image href="http://wakey.io/public/img/podcast.png"/>
+    <itunes:subtitle>Start your day smart!</itunes:subtitle>
+    <description>Wakey Wakey wants you to start your day smart. Every morning, we'll tell you about something awesome and why it matters. Whether you're into finance, science, technology, art, airplanes, medicine, food, history, or even killer robots—we'll bring you the world!</description>
+    <itunes:summary>Wakey Wakey wants you to start your day smart. Every morning, we'll tell you about something awesome and why it matters. Whether you're into finance, science, technology, art, airplanes, medicine, food, history, or even killer robots—we'll bring you the world!</itunes:summary>
+    <itunes:owner>
+      <itunes:name>Wakey.io</itunes:name>
+      <itunes:email>info@wakey.io</itunes:email>
+    </itunes:owner>
+
+    {% for ep in data.episodes %}
+    <item>
+      <title>{{ep.title}}</title>
+      <itunes:explicit>No</itunes:explicit>
+      <itunes:author>Wakey Wakey</itunes:author>
+      <itunes:duration>{{ ep.duration }}</itunes:duration>
+      <pubDate>{{ep.date}}</pubDate>
+      <itunes:subtitle>""</itunes:subtitle>
+      <itunes:summary><![CDATA[ Episode: {{ep.title}} ]]></itunes:summary>
+      <description><![CDATA[ Episode: {{ep.title}} ]]></description>
+      <guid isPermaLink="true">{{ ep.path }}</guid>
+      <category>"News &amp; Politics"</category>
+      <enclosure length="{{ ep.size }}" url="{{ ep.path }}" type="audio/mp3"/>
+    </item>
+    {% endfor %}
+  </channel>
+</rss>

@@ -12,9 +12,9 @@
 # Dynamically generates an audio JSON Alexa Flash Briefing feed, based on the day of the week.
 # Follow these steps: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using the main root URL for this app & submit it for certification.
 
-from flask import Flask, request, redirect, session, render_template
+from flask import Flask, request, redirect, session, render_template, Response, make_response
 from datetime import datetime
-from time import gmtime, strftime
+from time import gmtime, strftime, mktime
 from twilio.twiml.voice_response import Gather, VoiceResponse, Say
 import boto3
 import requests
@@ -26,6 +26,7 @@ from ffmpy import FFmpeg
 import subprocess
 from random import randint
 import parsedatetime as pdt
+from email import utils
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
@@ -46,12 +47,13 @@ emailers = {
 
 # get date components (month, day, year) from s3 filenames
 def getdatefromfilename(text):
-    #print "*"+text+"*"
-    day = int(text[-6:-4].lstrip("0").replace(" 0", " "))
-    month = int(text[5:-7].lstrip("0").replace(" 0", " "))
-    year = int(text[:4])
-    return month, day, year
+	day = int(text[-6:-4].lstrip("0").replace(" 0", " "))
+	month = int(text[5:-7].lstrip("0").replace(" 0", " "))
+	year = int(text[:4])
+	date = datetime(year=year, month=month, day=day)
+	return month, day, year, date
 
+# get all episodes (for alexa feed)
 def geteps():
 	try:
 		s3 = boto3.client( 's3',
@@ -74,13 +76,53 @@ def geteps():
 			elif fn is "":
 				pass
 			else:
-				month, day, year = getdatefromfilename(fn)
+				month, day, year, date = getdatefromfilename(fn)
 				if isvaliddate(month, day, year) is True:
 					data["episodes"].append(fn[:-4])
 		print "Retreived episode list!!"
 		print data
 		return data
 
+	except Exception as e:
+		print "Error talking to s3"
+		raise
+		return False
+
+# get all episodes with additional file data(for iTunes feed)
+def getepsiTunes():
+	try:
+		s3 = boto3.client( 's3',
+		    aws_access_key_id=os.environ['S3KI'],
+		    aws_secret_access_key=os.environ['S3SK'])
+		print "Connected to s3!!"
+		resp = s3.list_objects_v2(
+		    Bucket="wakey.io",
+		    Prefix="alexa_audio/")
+		data = dict()
+		data["episodes"] = []
+
+		for o in resp['Contents']:
+			fn = o['Key'].replace('alexa_audio/','')
+			size = o['Size']
+			if "offair" in fn or fn is "":
+				pass
+			else:
+				month, day, year, date = getdatefromfilename(fn)
+				dt = date.timetuple()
+				dts = mktime(dt)
+				daterfc = utils.formatdate(dts)
+
+				if isvaliddate(month, day, year) is True and isnotfuturedate(month, day, year) is True:
+					data["episodes"].append({
+						"path": "http://wakey.io/alexa_audio/"+fn,
+						"title": fn[:-4],
+						"date": daterfc,
+						"duration": "",
+						"size": size
+						})
+		print "Retreived episode list for iTunes!!"
+		print data
+		return data
 	except Exception as e:
 		print "Error talking to s3"
 		raise
@@ -137,7 +179,7 @@ def amplify(audio):
 		#return False
 
 
-# validate date (assumes current year, unless specified - call ins always assumes current year)
+# validate date (assumes current year, unless specified)
 def isvaliddate(month, day, year=(datetime.now().year)):
     correctDate = None
     try:
@@ -146,6 +188,16 @@ def isvaliddate(month, day, year=(datetime.now().year)):
     except ValueError:
         correctDate = False
     return correctDate
+
+
+# make sure date is not in the future & also a valid date
+def isnotfuturedate(month, day, year):
+	qdate = datetime(year, month, day, tzinfo=pytz.UTC)
+	now = datetime.now(pytz.UTC)
+	if qdate <= now:
+		return True
+	else:
+		return False
 
 
 def save_to_s3_CLASSIC():
@@ -262,11 +314,8 @@ def emailback(email, subject, body):
 		raise
 		return False
 
-
-# Generate feed based on day of week
-@app.route('/', methods=['GET'])
-def index():
-	# establish current date in PT timezone
+# establish current date in PT timezone
+def getTime():
 	tz = pytz.timezone('America/Los_Angeles')
 	today = datetime.now(tz)
 	today_utc = today.astimezone(pytz.UTC)
@@ -274,10 +323,18 @@ def index():
 	date_locale = today.strftime("%a, %B %d").lstrip("0").replace(" 0", " ")
 
 	# debug lines for date info #
-	print date
-	print date_locale
-	print today_utc
-	print '\n'
+	#print date
+	#print date_locale
+	#print today
+	#print today_utc
+	return date, date_locale, today, today_utc
+
+
+# Generate feed based on day of week
+@app.route('/', methods=['GET'])
+def index():
+	# get current date in PT timezone
+	date, date_locale, today, today_utc = getTime()
 
 	feed = {}
 	feed['uid'] = str(uuid.uuid4())
@@ -310,6 +367,27 @@ def episodes():
 			phone=os.environ['PHONE'],
 			email=os.environ['EMAIL'],
             data=data)
+	else:
+		return render_template('error.html')
+
+
+# generate iTunes podcast feed xml (does not include -future- episodes)
+@app.route('/podcast', methods=['GET'])
+def podcast():
+	data = getepsiTunes()
+	date, date_locale, today, today_utc = getTime()
+	dt = today.timetuple()
+	dts = mktime(dt)
+	daterfc = utils.formatdate(dts)
+	if data:
+		for ep in data['episodes']:
+			xml = render_template(
+			'feed.xml',
+			date=daterfc,
+            data=data)
+		feed = make_response(xml)
+		feed.headers["Content-Type"] = "application/xml"
+		return feed
 	else:
 		return render_template('error.html')
 
