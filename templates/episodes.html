@@ -17,7 +17,7 @@
   {% if data.episodes %}
     {% for file in data.episodes %}
       <p>
-        <a href="https://wakey.io/alexa_audio/{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="https://wakey.io/alexa_audio/{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
+        <a href="https://wakey.io/alexa_audio/{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="https://wwaudio.s3.amazonaws.com/audio//{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
       </p>
     {% endfor %}
   {% else %}
