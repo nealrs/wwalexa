@@ -167,7 +167,7 @@ def s3save(filename, fileobj):
 		s3 = boto3.client( 's3', aws_access_key_id=os.environ['S3KI'], aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 
-		print s3.put_object(Bucket="wwaudio", Key="audio/"+filename, Body=fileobj)
+		print s3.put_object(Bucket="wwaudio", Key="audio/"+filename, Body=fileobj, ACL="public-read")
 		print "uploaded " + filename+ " to s3!"
 		return True
 	except Exception as e:
