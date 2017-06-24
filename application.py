@@ -62,7 +62,7 @@ def geteps():
 		    aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 		resp = s3.list_objects_v2(
-		    Bucket="www.wakey.io",
+		    Bucket="wwaudio",
 		    Prefix="audio/")
 		data = dict()
 		data["offairs"] = []
@@ -71,7 +71,6 @@ def geteps():
 		for o in resp['Contents']:
 			print "filename: "+ o['Key']
 			fn = o['Key'].replace('audio/','')
-		    #print "*"+fn+"*"
 			if "offair" in fn:
 				data["offairs"].append(fn[:-4])
 			elif fn is "":
@@ -226,7 +225,7 @@ def isvaliddate(month, day, year=(datetime.now().year)):
 
 # make sure date is not in the future & also a valid date
 def isnotfuturedate(month, day, year):
-	qdate = datetime(year, month, day, tzinfo=pytz.UTC)
+	qdate = datetime(year, month, day, tzinfo=pytz.timezone('America/Los_Angeles'))
 	now = datetime.now(pytz.UTC)
 	if qdate <= now:
 		return True
