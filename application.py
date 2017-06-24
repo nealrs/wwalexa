@@ -97,7 +97,7 @@ def getepsiTunes():
 		    aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 		resp = s3.list_objects_v2(
-		    Bucket="www.wakey.io",
+		    Bucket="wwaudio",
 		    Prefix="audio/")
 		data = dict()
 		data["episodes"] = []
@@ -115,7 +115,7 @@ def getepsiTunes():
 
 				if isvaliddate(month, day, year) is True and isnotfuturedate(month, day, year) is True:
 					data["episodes"].append({
-						"path": "http://www.wakey.io/audio/"+fn,
+						"path": "http://wwaudio.s3.amazonaws.com/audio/"+fn,
 						"title": fn[:-4],
 						"date": daterfc,
 						"duration": "",
@@ -139,7 +139,7 @@ def getlatest():
 		    aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 		resp = s3.list_objects_v2(
-		    Bucket="www.wakey.io",
+		    Bucket="wwaudio",
 		    Prefix="audio/")
 		tmp = []
 
@@ -168,7 +168,7 @@ def s3save(filename, fileobj):
 		s3 = boto3.client( 's3', aws_access_key_id=os.environ['S3KI'], aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 
-		s3.put_object(Bucket="www.wakey.io", Key="audio/"+filename, Body=fileobj)
+		s3.put_object(Bucket="wwaudio", Key="audio/"+filename, Body=fileobj)
 		print "uploaded " + filename+ " to s3!"
 		return True
 	except Exception as e:
@@ -270,7 +270,7 @@ def save_to_s3_CLASSIC():
 		print "normalized audio"
 
 		# Upload to s3
-		s3.put_object(Bucket="www.wakey.io", Key="audio/"+filename, Body=stdout)
+		s3.put_object(Bucket="wwaudio", Key="audio/"+filename, Body=stdout)
 		print "uploaded " + filename+ " to s3"
 		return True
 
@@ -375,7 +375,7 @@ def index():
 	feed['updateDate'] = today_utc.strftime('%Y-%m-%dT%H:%M:%S.0Z')
 	feed['mainText'] = ''
 
-	url = "https://www.wakey.io/audio/" +date+ ".mp3"
+	url = "http://wwaudio.s3.amazonaws.com/audio/" +date+ ".mp3"
 	print "checking for: " + url
 	if url_check(url):
 		print "on-air"
@@ -384,7 +384,7 @@ def index():
 	else:
 		print "off-air" # no content found
 		feed['titleText'] = 'Wakey Wakey is off-air right now, check back again soon!'
-		feed['streamUrl'] = "https://www.wakey.io/audio/offair_"+str(randint(0, 4))+".mp3"
+		feed['streamUrl'] = "http://wwaudio.s3.amazonaws.com/audio/offair_"+str(randint(0, 4))+".mp3"
 
 	feed_json = json.dumps(feed)
 	print feed_json
@@ -415,7 +415,7 @@ def latest():
 	m, d, y, dt = getdatefromfilename(fn)
 	nice_date = dt.strftime("%B %d, %Y")
 
-	latest = {"date": date, "nice_date": nice_date, "filename": "https://www.wakey.io/audio/"+ fn}
+	latest = {"date": date, "nice_date": nice_date, "filename": "http://wwaudio.s3.amazonaws.com/audio/"+ fn}
 
 	feed_json = json.dumps(latest)
 	print feed_json
