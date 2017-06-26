@@ -7,3 +7,4 @@ gunicorn==0.14.2
 ffmpy==0.2.2
 parsedatetime==2.4
 flask_cors==3.0.2
+Flask_BasicAuth==0.2.0

@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, session, render_template, Response, make_response
 from flask_cors import CORS, cross_origin
+from flask_basicauth import BasicAuth
 from datetime import datetime
 from time import gmtime, strftime, mktime
 from twilio.twiml.voice_response import Gather, VoiceResponse, Say
@@ -17,6 +18,9 @@ from email import utils
 
 app = Flask(__name__)
 app.secret_key = os.environ['SESSKEY']
+app.config['BASIC_AUTH_USERNAME'] = os.environ['BAUSER']
+app.config['BASIC_AUTH_PASSWORD'] = os.environ['BAPASS']
+basic_auth = BasicAuth(app)
 
 # Approved callers
 callers = {
@@ -31,6 +35,8 @@ emailers = {
 	os.environ['RME2'] : "Richard",
 	os.environ['SLE'] : "Steve"
 }
+
+### METHODS THAT ACTUALLY DO THINGS
 
 # get date components (month, day, year) from s3 filenames
 def getdatefromfilename(text):
@@ -173,7 +179,6 @@ def backupaudio(audio):
 		print "Backed up original audio file as: "+ tfn
 	else:
 		print "FAILED to backup original audio file"
-
 
 
 # download audio file from twilio and return file object
@@ -367,6 +372,9 @@ def getTime():
 	return date, date_locale, today, today_utc
 
 
+
+###  ROUTES
+
 # Generate feed based on day of week
 @app.route('/', methods=['GET'])
 def index():
@@ -396,6 +404,7 @@ def index():
 
 # return list of episodes & offairs w/ html5 audio players (kind of like an admin dashboard, but unprotected right now)
 @app.route('/episodes', methods=['GET'])
+@basic_auth.required
 def episodes():
 	data = geteps()
 	if data:

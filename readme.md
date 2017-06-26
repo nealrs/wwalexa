@@ -119,7 +119,7 @@ There are a few additional endpoints too:
 }
 ```
 
-- `/episodes`- returns a playable list of existing episodes and off-air messages. Ideally, you should password protect this.
+- `/episodes`- returns a playable list of existing episodes and off-air messages. This route is protected with basic username/password which you'll set as `BAUSER` & `BAPASS` environment variables.
 
 - `/podcast` - generates a mostly iTunes compliant podcast feed (missing duration) - but you'll have to edit all the name/category details yourself.
 
@@ -158,6 +158,9 @@ PODCASTNAME="YOUR PODCAST NAME"
 TZ=America/Los_Angeles
 
 DEBUG=False
+
+BAUSER=username
+BAPASS=p@ssw0rd
 ```
 
 3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.
