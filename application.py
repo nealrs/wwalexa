@@ -157,9 +157,19 @@ def s3save(filename, fileobj, folder):
 		print "uploaded " + filename+ " to s3!"
 		return True
 	except Exception as e:
-		print "Error saving to s3"
+		print "Error saving "+filename+ "to s3"
 		raise
 		return False
+
+# backup audio shortcut method
+def backupaudio(audio):
+	tfn = str(uuid.uuid4())+".mp3"
+	print "backup filename: "+ tfn
+	if s3save(tfn, audio, os.environ['ORIGINAL']):
+		print "Backed up original audio file as: "+ tfn
+	else:
+		print "FAILED to backup original audio file"
+
 
 
 # download audio file from twilio and return file object
@@ -276,11 +286,7 @@ def save_to_s3_twilio():
 		audio = getaudio(session['mp3url'])
 
 		# backup original audio
-		tfn = str(uuid.uuid4())+".mp3"
-		if s3save(tfn, audio, os.environ['ORIGINAL']):
-			print "Backup original audio file as: "+ tfn
-		else:
-			print "FAILED to backup original audio file"
+		backupaudio(audio)
 
 		# amplify audio
 		amped_audio = amplify(audio)
@@ -294,21 +300,17 @@ def save_to_s3_twilio():
 		return False
 
 
-def save_to_s3_email(date, file_obj):
+def save_to_s3_email(date, audio):
 	filename = date.strftime("%Y-%m-%d")+".mp3"
 	print "filename: " + filename
 
 	# download, process, and save url to s3
 	try:
 		# backup original audio
-		tfn = str(uuid.uuid4())+".mp3"
-		if s3save(tfn, file_obj, os.environ['ORIGINAL']):
-			print "Backup original audio file as: "+ tfn
-		else:
-			print "FAILED to backup original audio file"
+		backupaudio(audio)
 
 		# amplify audio
-		amped_audio = amplify(file_obj)
+		amped_audio = amplify(audio)
 
 		# upload to s3
 		return s3save(filename, amped_audio, os.environ['AUDIO'])
