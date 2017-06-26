@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="robots" content="noindex">
-  <title>Wakey Wakey Episode List</title>
+  <title>{{name}} Episode List</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
@@ -17,7 +17,7 @@
   {% if data.episodes %}
     {% for file in data.episodes %}
       <p>
-        <a href="https://wwaudio.s3.amazonaws.com/audio/{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="https://wwaudio.s3.amazonaws.com/audio/{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
+        <a href="{{path}}{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="{{path}}{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
       </p>
     {% endfor %}
   {% else %}
@@ -29,14 +29,14 @@
   {% if data.offairs %}
     {% for file in data.offairs %}
       <p>
-        <a href="https://wwaudio.s3.amazonaws.com/audio/{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="https://wwaudio.s3.amazonaws.com/audio/{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
+        <a href="{{path}}{{ file }}.mp3">{{ file }}</a> &nbsp; <audio src="{{path}}{{ file }}.mp3" preload=none controls style="vertical-align: middle;"></audio>
       </p>
     {% endfor %}
   {% else %}
     <p>No offairs found, go record some!</p>
   {% endif %}
 
-<p>&copy; 2017 Wakey Wakey</p>
+<p>&copy; 2017 {{name}}</p>
 
 
 </body>

@@ -107,11 +107,27 @@ If it can't find a file for that day, it'll play a canned "we're off the air tod
 
 Since Alexa is primarily a US thing, the app uses Pacific time to determine what day/time it is.
 
+There are a few additional endpoints too:
+
+- `/latest` - returns a JSON object containing URL of latest episode, date, and a "nice" date string. And yes, it's CORS enabled:
+
+```json
+{
+  filename: "http://wwaudio.s3.amazonaws.com/audio/2017-06-26.mp3",
+  date: "2017-06-26",
+  nice_date: "June 26, 2017"
+}
+```
+
+- `/episodes`- returns a playable list of existing episodes and off-air messages. Ideally, you should password protect this.
+
+- `/podcast` - generates a mostly iTunes compliant podcast feed (missing duration) - but you'll have to edit all the name/category details yourself.
+
 ## How to Use
 
-1. Create a public s3 bucket for your audio files & configure the code to use your bucket.
+1. Create a public s3 bucket for your audio files with `audio` and `original_audio` subfolders. Make sure these are publicly readable.
 
-2. Set environment variables for s3 access, authorized numbers & emailers, and Mailgun API keys:
+2. Set environment variables for authorized numbers & emailers, Mailgun API keys, and s3 bucket access:
 
 ```
 S3KI=derppppp
@@ -129,6 +145,17 @@ SLE=foo@bar.baz
 
 MAILGUNDOMAIN=https://api.mailgun.net/v3/foobar
 MAILGUNKEY=key-xxxx8765309xxxx
+
+PHONE=+1XXXXXXXXX
+EMAIL=foo@bar.baz
+
+BUCKET=foobar
+AUDIO=audio/
+ORIGINAL=original_audio/
+FPATH=https://foobar.s3.amazonaws.com/
+
+PODCASTNAME="YOUR PODCAST NAME"
+TZ=America/Los_Angeles
 ```
 
 3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.
@@ -137,7 +164,7 @@ MAILGUNKEY=key-xxxx8765309xxxx
 
 5. Call yourself and record a test message for today.
 
-6. Log in to s3 and verify the file is publicly accessible.
+6. Go to `https://youapp.com/episodes` to verify your file is available, set for the right day, and playable.
 
 7. [Follow these steps]( https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using your app's root URL.
 

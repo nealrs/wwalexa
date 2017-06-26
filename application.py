@@ -1,17 +1,3 @@
-# Call in your Alexa Flash Briefing / Generate a dynamic feed
-
-# How the fun / Twilio stuff works:
-#  Check caller against approved number list
-#  if approved caller, ask for date input as MMDD
-#  if valid date, record up to 3 min of audio (if not valid, start over)
-#  play back audio recording and ask if acceptable
-#  if acceptable, save to audio to s3 using date as filename. (s3 not implemented yet)
-#  if not acceptable, hangup.
-
-# Main route / Alexa Feed:
-# Dynamically generates an audio JSON Alexa Flash Briefing feed, based on the day of the week.
-# Follow these steps: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/steps-to-create-a-flash-briefing-skill) to setup your Flash Briefing on Alexa using the main root URL for this app & submit it for certification.
-
 from flask import Flask, request, redirect, session, render_template, Response, make_response
 from flask_cors import CORS, cross_origin
 from datetime import datetime
@@ -30,8 +16,8 @@ import parsedatetime as pdt
 from email import utils
 
 app = Flask(__name__)
-#cors = CORS(app, resources={r"/latest/*": {"origins": "*"}})
 app.secret_key = os.environ['SESSKEY']
+
 # Approved callers
 callers = {
 	os.environ['NS'] : "Neal",
@@ -62,15 +48,15 @@ def geteps():
 		    aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 		resp = s3.list_objects_v2(
-		    Bucket="wwaudio",
-		    Prefix="audio/")
+		    Bucket=os.environ['BUCKET'],
+		    Prefix=os.environ['AUDIO'])
 		data = dict()
 		data["offairs"] = []
 		data["episodes"] = []
 
 		for o in resp['Contents']:
 			print "filename: "+ o['Key']
-			fn = o['Key'].replace('audio/','')
+			fn = o['Key'].replace(os.environ['AUDIO'],'')
 			if "offair" in fn:
 				data["offairs"].append(fn[:-4])
 			elif fn is "":
@@ -96,13 +82,13 @@ def getepsiTunes():
 		    aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 		resp = s3.list_objects_v2(
-		    Bucket="wwaudio",
-		    Prefix="audio/")
+		    Bucket=os.environ['BUCKET'],
+		    Prefix=os.environ['AUDIO'])
 		data = dict()
 		data["episodes"] = []
 
 		for o in resp['Contents']:
-			fn = o['Key'].replace('audio/','')
+			fn = o['Key'].replace(os.environ['AUDIO'],'')
 			size = o['Size']
 			if "offair" in fn or fn is "":
 				pass
@@ -114,7 +100,7 @@ def getepsiTunes():
 
 				if isvaliddate(month, day, year) is True and isnotfuturedate(month, day, year) is True:
 					data["episodes"].append({
-						"path": "http://wwaudio.s3.amazonaws.com/audio/"+fn,
+						"path": os.environ['FPATH']+os.environ['AUDIO']+fn,
 						"title": fn[:-4],
 						"date": daterfc,
 						"duration": "",
@@ -138,12 +124,12 @@ def getlatest():
 		    aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 		resp = s3.list_objects_v2(
-		    Bucket="wwaudio",
-		    Prefix="audio/")
+		    Bucket=os.environ['BUCKET'],
+		    Prefix=os.environ['AUDIO'])
 		tmp = []
 
 		for o in resp['Contents']:
-			fn = o['Key'].replace('audio/','')
+			fn = o['Key'].replace(os.environ['AUDIO'],'')
 			if "offair" in fn or fn is "":
 				pass
 			else:
@@ -162,12 +148,12 @@ def getlatest():
 		return False
 
 # save file to s3
-def s3save(filename, fileobj):
+def s3save(filename, fileobj, folder):
 	try:
 		s3 = boto3.client( 's3', aws_access_key_id=os.environ['S3KI'], aws_secret_access_key=os.environ['S3SK'])
 		print "Connected to s3!!"
 
-		print s3.put_object(Bucket="wwaudio", Key="audio/"+filename, Body=fileobj, ACL="public-read")
+		print s3.put_object(Bucket=os.environ['BUCKET'], Key=folder+filename, Body=fileobj, ACL="public-read")
 		print "uploaded " + filename+ " to s3!"
 		return True
 	except Exception as e:
@@ -225,14 +211,14 @@ def isvaliddate(month, day, year=(datetime.now().year)):
 
 # make sure date is not in the future & also a valid date
 def isnotfuturedate(month, day, year):
-	qdate = datetime(year, month, day, tzinfo=pytz.timezone('America/Los_Angeles'))
+	qdate = datetime(year, month, day, tzinfo=pytz.timezone(os.environ['TZ']))
 	now = datetime.now(pytz.UTC)
 	if qdate <= now:
 		return True
 	else:
 		return False
 
-
+"""
 def save_to_s3_CLASSIC():
 	print "recording url: " + session['mp3url']
 	filename = session['airdate'].strftime("%Y-%m-%d")+".mp3"
@@ -277,7 +263,7 @@ def save_to_s3_CLASSIC():
 		print "Error uploading " + filename+ " to s3"
 		raise
 		return False
-
+"""
 
 def save_to_s3_twilio():
 	print "recording url: " + session['mp3url']
@@ -289,11 +275,18 @@ def save_to_s3_twilio():
 		# get audio file stream
 		audio = getaudio(session['mp3url'])
 
+		# backup original audio
+		tfn = str(uuid.uuid4())+".mp3"
+		if s3save(tfn, audio, os.environ['ORIGINAL']):
+			print "Backup original audio file as: "+ tfn
+		else:
+			print "FAILED to backup original audio file"
+
 		# amplify audio
 		amped_audio = amplify(audio)
 
 		# upload to s3
-		return s3save(filename, amped_audio)
+		return s3save(filename, amped_audio, os.environ['AUDIO'])
 
 	except Exception as e:
 		print "Error getting, processing, or saving " + filename
@@ -307,14 +300,18 @@ def save_to_s3_email(date, file_obj):
 
 	# download, process, and save url to s3
 	try:
-		# get audio file stream
-		#audio = getaudio(session['mp3url'])
+		# backup original audio
+		tfn = str(uuid.uuid4())+".mp3"
+		if s3save(tfn, file_obj, os.environ['ORIGINAL']):
+			print "Backup original audio file as: "+ tfn
+		else:
+			print "FAILED to backup original audio file"
 
 		# amplify audio
 		amped_audio = amplify(file_obj)
 
 		# upload to s3
-		return s3save(filename, amped_audio)
+		return s3save(filename, amped_audio, os.environ['AUDIO'])
 
 	except Exception as e:
 		print "Error getting, processing, or saving " + filename
@@ -338,7 +335,7 @@ def emailback(email, subject, body):
 		resp = requests.post(
         os.environ['MAILGUNDOMAIN']+"/messages",
         auth=("api", os.environ['MAILGUNKEY']),
-        data={"from": "AlexaFeed <alexa@neal.rs>",
+        data={"from": os.environ['PODCASTNAME']+" <"+os.environ['EMAIL']+">",
               "to": [email],
               "subject": subject,
               "text": body})
@@ -349,7 +346,7 @@ def emailback(email, subject, body):
 
 # establish current date in PT timezone
 def getTime():
-	tz = pytz.timezone('America/Los_Angeles')
+	tz = pytz.timezone(os.environ['TZ'])
 	today = datetime.now(tz)
 	today_utc = today.astimezone(pytz.UTC)
 	date = today.strftime("%Y-%m-%d")
@@ -374,16 +371,16 @@ def index():
 	feed['updateDate'] = today_utc.strftime('%Y-%m-%dT%H:%M:%S.0Z')
 	feed['mainText'] = ''
 
-	url = "http://wwaudio.s3.amazonaws.com/audio/" +date+ ".mp3"
+	url = os.environ['FPATH']+os.environ['AUDIO']+date+ ".mp3"
 	print "checking for: " + url
 	if url_check(url):
 		print "on-air"
-		feed['titleText'] = 'Wakey Wakey ~ '+ date_locale
+		feed['titleText'] = os.environ['PODCASTNAME']+ ' ~ '+ date_locale
 		feed['streamUrl'] = url
 	else:
 		print "off-air" # no content found
-		feed['titleText'] = 'Wakey Wakey is off-air right now, check back again soon!'
-		feed['streamUrl'] = "http://wwaudio.s3.amazonaws.com/audio/offair_"+str(randint(0, 4))+".mp3"
+		feed['titleText'] = os.environ['PODCASTNAME']+' is off-air right now, check back again soon!'
+		feed['streamUrl'] = os.environ['FPATH']+os.environ['AUDIO']+"offair_"+str(randint(0, 4))+".mp3"
 
 	feed_json = json.dumps(feed)
 	print feed_json
@@ -399,7 +396,9 @@ def episodes():
 			'episodes.html',
 			phone=os.environ['PHONE'],
 			email=os.environ['EMAIL'],
-            data=data)
+            data=data,
+			name=os.environ['PODCASTNAME'],
+			path=os.environ['FPATH']+os.environ['AUDIO'])
 	else:
 		return render_template('error.html')
 
@@ -414,7 +413,7 @@ def latest():
 	m, d, y, dt = getdatefromfilename(fn)
 	nice_date = dt.strftime("%B %d, %Y")
 
-	latest = {"date": date, "nice_date": nice_date, "filename": "http://wwaudio.s3.amazonaws.com/audio/"+ fn}
+	latest = {"date": date, "nice_date": nice_date, "filename": os.environ['FPATH']+os.environ['AUDIO']+ fn}
 
 	feed_json = json.dumps(latest)
 	print feed_json
@@ -433,7 +432,7 @@ def podcast():
 			xml = render_template(
 			'feed.xml',
 			date=daterfc,
-            data=data)
+            data=data) # FEED NEEDS A LOT OF MANUAL WORK / CONTAINS NO ENV VARS, SO NEED TO EDIT ON YOUR OWN !!!
 		feed = make_response(xml)
 		feed.headers["Content-Type"] = "application/xml"
 		return feed
@@ -455,7 +454,7 @@ def begin_call():
   	if session['caller'] != "unknown":
 		resp.say("Hey " + session['caller'] + "!")
 		gather = Gather(input='dtmf speech', timeout=5, num_digits=4, action='/set_date', method='GET')
-		gather.say("Let's record a new Wakey Wakey!\n First, when will this episode air?\n Say the air date or punch it in using a Month Month Day Day format.\n For example, you could say October 31st or punch in 10 31.")
+		gather.say("Let's record a new "+os.environ['PODCASTNAME']+"!\n First, when will this episode air?\n Say the air date or punch it in using a Month Month Day Day format.\n For example, you could say October 31st or punch in 10 31.")
 		resp.append(gather)
 		resp.say("You didn't give me a date. Bye!")
 	else:
@@ -548,6 +547,8 @@ def save_finish():
 def email():
 	sender = request.form['sender']
 	date = request.form['subject']
+	#print date
+
 	month = int(date[5:-3].lstrip("0").replace(" 0", " "))
 	day = int(date[-2:].lstrip("0").replace(" 0", " "))
 	year = int(date[:4])
@@ -566,18 +567,18 @@ def email():
 
 			if save_to_s3_email(fndate, data) is True:
 				print request.files.values()[0].filename+" saved!"
-				emailback(sender, "Your WW airs "+ fndate.strftime("%A, %B %-d, %Y"), emailers[sender]+ ", we successfully scheduled your episode.\n\nDon't reply to this email.")
+				emailback(sender, "Your episode airs "+ fndate.strftime("%A, %B %-d, %Y"), emailers[sender]+ ", we successfully scheduled your episode.\n\nDon't reply to this email.")
 				return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 			else:
 				print "error saving "+attachment.filename
-				emailback(sender, "Error saving your WW ep to S3", "Try again? \n\nDon't reply to this email.")
+				emailback(sender, "Error saving your episode to S3", "Try again? \n\nDon't reply to this email.")
 				return json.dumps({'file_saved':False}), 200, {'ContentType':'application/json'}
 		else:
 			print "incorrectly formatted date "+date
-			emailback(sender, "Error in your WW airdate", "Try again - and remember - your subject line should be 'YYYY-MM-DD', and that's it.\n\nDon't reply to this email.")
+			emailback(sender, "Error in your airdate", "Try again - and remember - your subject line should be 'YYYY-MM-DD', and that's it.\n\nDon't reply to this email.")
 			return json.dumps({'date_correct':False}), 200, {'ContentType':'application/json'}
 	else:
 		return json.dumps({'good_email':False}), 200, {'ContentType':'application/json'}
 
 if __name__ == "__main__":
-	app.run(debug=False)
+	app.run(debug=os.environ['DEBUG'])
