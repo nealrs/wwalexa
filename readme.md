@@ -127,7 +127,7 @@ There are a few additional endpoints too:
 
 1. Create a public s3 bucket for your audio files with `audio` and `original_audio` subfolders. Make sure these are publicly readable.
 
-2. Set environment variables for authorized numbers & emailers, Mailgun API keys, and s3 bucket access:
+2. Set environment variables for authorized numbers & emailers, Mailgun API keys, and s3 bucket access (FYI, I'd set DEBUG to False on Heroku and True locally):
 
 ```
 S3KI=derppppp
@@ -156,6 +156,8 @@ FPATH=https://foobar.s3.amazonaws.com/
 
 PODCASTNAME="YOUR PODCAST NAME"
 TZ=America/Los_Angeles
+
+DEBUG=False
 ```
 
 3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.

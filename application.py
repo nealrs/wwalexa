@@ -40,6 +40,7 @@ def getdatefromfilename(text):
 	date = datetime(year=year, month=month, day=day)
 	return month, day, year, date
 
+
 # get all episodes (for alexa feed)
 def geteps():
 	try:
@@ -73,6 +74,7 @@ def geteps():
 		print "Error talking to s3"
 		raise
 		return False
+
 
 # get all episodes with additional file data(for iTunes feed)
 def getepsiTunes():
@@ -147,6 +149,7 @@ def getlatest():
 		raise
 		return False
 
+
 # save file to s3
 def s3save(filename, fileobj, folder):
 	try:
@@ -160,6 +163,7 @@ def s3save(filename, fileobj, folder):
 		print "Error saving "+filename+ "to s3"
 		raise
 		return False
+
 
 # backup audio shortcut method
 def backupaudio(audio):
@@ -346,6 +350,7 @@ def emailback(email, subject, body):
 		raise
 		return False
 
+
 # establish current date in PT timezone
 def getTime():
 	tz = pytz.timezone(os.environ['TZ'])
@@ -420,6 +425,7 @@ def latest():
 	feed_json = json.dumps(latest)
 	print feed_json
 	return feed_json
+
 
 # return iTunes podcast feed xml (does not include -future- episodes)
 @app.route('/podcast', methods=['GET'])
@@ -544,6 +550,7 @@ def save_finish():
 	session.clear()
 	return str(resp)
 
+
 # process incoming email via mailgun routes (SUPER HACKY!!!)
 @app.route("/email", methods=["GET", "POST"])
 def email():
@@ -581,6 +588,7 @@ def email():
 			return json.dumps({'date_correct':False}), 200, {'ContentType':'application/json'}
 	else:
 		return json.dumps({'good_email':False}), 200, {'ContentType':'application/json'}
+
 
 if __name__ == "__main__":
 	app.run(debug=os.environ['DEBUG'])
