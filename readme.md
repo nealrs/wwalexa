@@ -1,6 +1,6 @@
 # AlexaFeed
 
-**TL;DR: Record a phone-call & use it to dynamically generate a JSON audio Alexa Flash Briefing feed.**
+**TL;DR: Record a phone call & use it to dynamically generate a JSON audio Alexa Flash Briefing feed.**
 
 [Watch a demo on YouTube](https://youtu.be/SfQLD24O7zY).
 
@@ -63,7 +63,7 @@ Once confirmed, the app will tell you to rock on and hangup. And boom, you've re
 
 _FYI_: The [official Alexa Feed spec](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/flash-briefing-skill-api-feed-reference) specifies a particular loudness for audio content and Twilio's recording quality isn't perfect.
 
-Alexa isn't super forgiving when it comes to audio loudness. It's pretty common for audio briefings to play softly because the engineer, didn't you know, _engineer_ it. So I went down the rabbit hole and incorporated an FFmpeg pipeline to adjust the loudness do some hi/lo pass filtering. It means you'll need to install ffmpeg as a separate buildpack on Heroku - but it also works SUPER WELL.
+Alexa isn't super forgiving when it comes to audio loudness. It's pretty common for audio briefings to play softly because the engineer, didn't you know, _engineer_ it. So, I went down the rabbit hole and incorporated an FFmpeg pipeline to adjust the loudness do some hi/lo pass filtering. It means you'll need to install ffmpeg as a separate buildpack on Heroku - but it also works SUPER WELL.
 
 ## Emailing in Updates
 
@@ -78,6 +78,12 @@ Message format:
 Approved emailers should receive success/failure confirmation.
 
 Not sure if Alexa supports mixed text/audio briefings - but if it does, this could be a fun way to add text clips to your feed.
+
+## Recording Updates From Your Browser
+
+Also added a Ziggeo based route `/record` for recording new episodes directly from your browser. The front end lets you pick a date, record a video, and then post it to to the app, which does all the usual ffmpeg pipeline stuff and then sends you to `/post-record` where you can confirm that your episode recorded.
+
+Why would you want this? Because if you have a decent computer mic, or don't have a phone, or don't know how to create good audio, or even just want to use existing video files -- this lets you add new episodes without desktop software. It's experimental, but it works :)
 
 ## The Feed
 
@@ -161,6 +167,8 @@ DEBUG=False
 
 BAUSER=username
 BAPASS=p@ssw0rd
+
+ZIGKEY=XXXXXXXXXXXX
 ```
 
 3. Deploy this hot mess to Heroku and install this [buildpack](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest) for FFmpeg.
