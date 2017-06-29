@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <title>Record a new {{name}} episode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="//assets-cdn.ziggeo.com/v1-r26/ziggeo.css" />
+  <script src="//assets-cdn.ziggeo.com/v1-r26/ziggeo.js"></script>
+  <script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js'></script>
+  <script>
+    ZiggeoApi.token = "{{key}}";
+    ZiggeoApi.Config.cdn = true;
+    ZiggeoApi.Config.webrtc = true;
+    ZiggeoApi.Config.resumable = true;
+
+    ZiggeoApi.Events.on("system_ready", function() {
+      var recorder = new ZiggeoApi.V2.Recorder({
+        element: document.getElementById("ziggeoRecorder"),
+        attrs: {
+          limit: 300,
+          picksnapshots: false,
+          theme: "minimal",
+          responsive: true
+        }
+      });
+      recorder.activate();
+      recorder.on("verified", function () {
+        //alert( 'Video token:' + recorder.get('video') );
+
+        var token = recorder.get('video');
+        console.log(token);
+        var videoURL = ZiggeoApi.Videos.source(token);
+        console.log(videoURL);
+
+        $("#submit").show();
+        $("#videoURL").val(videoURL);
+      });
+      recorder.on("rerecord", function () {
+        $("#submit").hide();
+        $("#videoURL").val(null);
+      });
+
+    });
+  </script>
+
+</head>
+<body>
+	<div class="">
+    <p><a href="/episodes">Existing episodes</a></p>
+    <form action="/post-record" method="post">
+      <p><label for="airdate">1. Select airdate</label>
+      <input type="date" class="" name="airdate" id="airdate" required></p>
+
+      <p><label for="video">2. Record video</label> (Click Upload Video if you're using Chrome on mobile.)</p>
+
+      <div id="ziggeoRecorder" style="max-width:640px; text-align:center;"></div>
+
+      <input type="hidden" class="" name="videoURL" id="videoURL" required>
+
+      <input type="submit" class="" style="display: none" id="submit" value ="3. Click here button to submit!">
+		</form>
+	</div>
+
+
+</body>
+</html>

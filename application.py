@@ -172,10 +172,10 @@ def s3save(filename, fileobj, folder):
 
 
 # backup audio shortcut method
-def backupaudio(audio):
+def backupaudio(data):
 	tfn = str(uuid.uuid4())+".mp3"
 	print "backup filename: "+ tfn
-	if s3save(tfn, audio, os.environ['ORIGINAL']):
+	if s3save(tfn, data, os.environ['ORIGINAL']):
 		print "Backed up original audio file as: "+ tfn
 	else:
 		print "FAILED to backup original audio file"
@@ -183,13 +183,31 @@ def backupaudio(audio):
 
 # download audio file from twilio and return file object
 def getaudio(audiourl):
+	data = None
 	try:
 		# get file stream
-		req_for_image = requests.get(audiourl, stream=True)
-		file_object_from_req = req_for_image.raw
-		req_data = file_object_from_req.read()
-		print "Retreived audio stream!!"
-		return req_data
+		if ".mp3" in audiourl:
+			r = requests.get(audiourl, stream=True)
+			file_r = r.raw
+			data = file_r.read()
+			print "Retreived audio stream!!"
+			return data
+		elif ".mp4" in audiourl:
+			r = requests.get(audiourl, stream=True)
+			fn = str(uuid.uuid4())
+			with open(fn, 'wb') as f:
+				for chunk in r.iter_content(chunk_size = 1024*1024):
+					if chunk:
+						f.write(chunk)
+				f.close()
+			with open(fn, 'r+b') as f:
+				data = f.read()
+			# clean up local file and return the data
+			os.remove(fn)
+			return data
+		else:
+			print "not an audio file!!"
+			return False
 	except Exception as e:
 		print "Error retreiving audio stream"
 		raise
@@ -201,7 +219,7 @@ def amplify(audio):
 	try:
 		ff = FFmpeg(
 		inputs={"pipe:0":None},
-		outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
+		outputs={"pipe:1": "-y -vn -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
 		print ff.cmd
 
 		stdout, stderr = ff.run(
@@ -284,15 +302,14 @@ def save_to_s3_CLASSIC():
 		return False
 """
 
-def save_to_s3_twilio():
-	print "recording url: " + session['mp3url']
-	filename = session['airdate'].strftime("%Y-%m-%d")+".mp3"
+def save_to_s3_url(url, filename):
+	print "recording url: " + url
 	print "filename: " + filename
 
 	# download, process, and save url to s3
 	try:
 		# get audio file stream
-		audio = getaudio(session['mp3url'])
+		audio = getaudio(url)
 
 		# backup original audio
 		backupaudio(audio)
@@ -548,7 +565,7 @@ def save_finish():
 	if digits == 1:
 		resp.say("Alright, give me a hot second...")
 		# save file to s3 with correct date as filename and end call
-		if save_to_s3_twilio() is True:
+		if save_to_s3_url(session['mp3url'], session['airdate'].strftime("%Y-%m-%d")+".mp3") is True:
 			resp.say("And boom, you're good to go! See you next time " + session['caller'] +" !")
 		else:
 			resp.say("Yikes "+ session['caller'] + " we ran into an error saving to s3. Can you try calling in again? Sorry!!")
@@ -597,6 +614,42 @@ def email():
 			return json.dumps({'date_correct':False}), 200, {'ContentType':'application/json'}
 	else:
 		return json.dumps({'good_email':False}), 200, {'ContentType':'application/json'}
+
+
+
+# record new video/clip using Ziggeo
+@app.route("/record", methods=["GET", "POST"])
+@basic_auth.required
+def record():
+	return render_template(
+		'record.html',
+		name=os.environ['PODCASTNAME'],
+		key=os.environ['ZIGKEY'])
+
+# record new video/clip using Ziggeo
+@app.route("/post-record", methods=["GET", "POST"])
+@basic_auth.required
+def post_record():
+	date = request.form['airdate']
+	zigURL = request.form['videoURL']
+
+	if date and zigURL:
+		print date
+		print zigURL
+		if save_to_s3_url(zigURL, date+".mp3") is True:
+			print "Ok, we downloaded & amplified & saved " +zigURL+ " to s3!"
+			return render_template(
+				'newep.html',
+				path=os.environ['FPATH']+os.environ['AUDIO'],
+				date=date,
+				name=os.environ['PODCASTNAME'])
+		else:
+			print "Crap, we COULD NOT download, amplify, and save " +zigURL+ " to s3!"
+			return render_template('error.html')
+	else:
+		print "no variables brah!"
+		return render_template('error.html')
+
 
 
 if __name__ == "__main__":
