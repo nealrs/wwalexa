@@ -206,7 +206,7 @@ def getaudio(audiourl):
 			os.remove(fn)
 			return data
 		else:
-			print "not an audio file!!"
+			print "not an mp3 or mp4 file!!"
 			return False
 	except Exception as e:
 		print "Error retreiving audio stream"
@@ -565,7 +565,7 @@ def save_finish():
 	if digits == 1:
 		resp.say("Alright, give me a hot second...")
 		# save file to s3 with correct date as filename and end call
-		if save_to_s3_url(session['mp3url'], session['airdate'].strftime("%Y-%m-%d")+".mp3") is True:
+		if save_to_s3_url(session['mp3url']+".mp3", session['airdate'].strftime("%Y-%m-%d")+".mp3") is True:
 			resp.say("And boom, you're good to go! See you next time " + session['caller'] +" !")
 		else:
 			resp.say("Yikes "+ session['caller'] + " we ran into an error saving to s3. Can you try calling in again? Sorry!!")
