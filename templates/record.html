@@ -3,7 +3,7 @@
   <meta charset="utf-8">
   <meta name="robots" content="noindex">
   <title>Record a new {{name}} episode</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="//assets-cdn.ziggeo.com/v1-r26/ziggeo.css" />
   <script src="//assets-cdn.ziggeo.com/v1-r26/ziggeo.js"></script>
   <script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js'></script>
@@ -14,6 +14,8 @@
     ZiggeoApi.Config.resumable = true;
 
     ZiggeoApi.Events.on("system_ready", function() {
+      $('.datepicker').pickadate()
+
       var recorder = new ZiggeoApi.V2.Recorder({
         element: document.getElementById("ziggeoRecorder"),
         attrs: {
