@@ -8,13 +8,33 @@
   <script src="//assets-cdn.ziggeo.com/v1-r26/ziggeo.js"></script>
   <script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js'></script>
   <script>
+
+    function isValidDate(dateString) {
+      var regEx = /^\d{4}-\d{2}-\d{2}$/;
+      if(!dateString.match(regEx))
+        return false;  // Invalid format
+      var d;
+      if(!((d = new Date(dateString))|0))
+        return false; // Invalid date (or this could be epoch)
+      return d.toISOString().slice(0,10) == dateString;
+    }
+
     ZiggeoApi.token = "{{key}}";
     ZiggeoApi.Config.cdn = true;
     ZiggeoApi.Config.webrtc = true;
     ZiggeoApi.Config.resumable = true;
 
     ZiggeoApi.Events.on("system_ready", function() {
-      $('.datepicker').pickadate()
+
+      // handler for setting URL params
+      var urlParams = new URLSearchParams(window.location.search);
+
+      if (urlParams.has('date') && isValidDate(urlParams.get('date'))){
+        var date = urlParams.get('date');
+        console.log("airdate set for " + date);
+        $('#airdate').val(date);
+        $("#airdate_div").hide();
+      }
 
       var recorder = new ZiggeoApi.V2.Recorder({
         element: document.getElementById("ziggeoRecorder"),
@@ -43,6 +63,7 @@
       });
 
     });
+
   </script>
 
 </head>
@@ -50,16 +71,18 @@
 	<div class="">
     <p><a href="/episodes">Existing episodes</a></p>
     <form action="/post-record" method="post">
-      <p><label for="airdate">1. Select airdate</label>
-      <input type="date" class="" name="airdate" id="airdate" required></p>
+      <div id="airdate_div">
+        <p><label for="airdate">Select airdate</label>
+          <input type="date" class="" name="airdate" id="airdate" required></p>
+      </div>
 
-      <p><label for="video">2. Record video</label> (Click Upload Video if you're using Chrome on mobile.)</p>
+      <p><label for="video">Record video</label> (Click Upload Video if you're using Chrome on mobile.)</p>
 
       <div id="ziggeoRecorder" style="max-width:640px; text-align:center;"></div>
 
       <input type="hidden" class="" name="videoURL" id="videoURL" required>
 
-      <input type="submit" class="" style="display: none" id="submit" value ="3. Click here button to submit!">
+      <input type="submit" class="" style="display: none" id="submit" value ="Click here button to submit!">
 		</form>
 	</div>
 
