@@ -219,7 +219,8 @@ def amplify(audio):
 	try:
 		ff = FFmpeg(
 		inputs={"pipe:0":None},
-		outputs={"pipe:1": "-y -vn -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
+		#outputs={"pipe:1": "-y -vn -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:TP=-2.0:LRA=11\" -b:a 256k -f mp3"} )
+		outputs={"pipe:1": "-y -af \"highpass=f=200,  lowpass=f=3000, loudnorm=I=-14:LRA=1\" -b:a 256k -f mp3"} )
 		print ff.cmd
 
 		stdout, stderr = ff.run(
@@ -529,7 +530,7 @@ def set_date():
 
 		resp.say("Ok " + session['caller'] + ", this episode will air "+ session['airdate'].strftime("%A, %B %-d, %Y"))
 		resp.say("Next, record up to 3 minutes of audio following the beep.\n Press any key when you're done.")
-		resp.record(max_length="180", action="/play_schedule") # 3 min max
+		resp.record(max_length="180", action="/play_schedule", RecordingChannels="dual", recording_channels="dual") # 3 min max
 	else:
 		resp.say("That's not a valid date, hang up and try again.")
 		resp.hangup()
